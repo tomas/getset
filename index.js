@@ -173,8 +173,9 @@ Getset.prototype.set = function(key, val, force){
   if (typeof val == 'undefined' ||
     (!force && typeof this._values[key] == 'undefined')) return;
 
-  this._modified = true;
-  return this._values[key] = val;
+  var opts = {};
+  opts[key] = val;
+  return this.merge(opts, true);
 }
 
 /**
@@ -195,9 +196,11 @@ Getset.prototype.update = function(key, val, callback){
  */
 Getset.prototype.save = function(callback){
   if (!this._file) return callback && callback(new Error("No file set."));
+
+  var self = this;
   fs.writeFile(this._file, ini.encode(this._values), function(err){
   	self._modified = false;
-  	callback(err);
+  	callback && callback(err);
   });
 }
 
