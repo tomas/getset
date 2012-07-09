@@ -1,0 +1,9 @@
+{
+  "name": "getset",
+  "version": "0.1.0",
+  "description": "Configuration-o-matic.",
+  "main": "index.js",
+  "dependencies": {
+    "ini": "*"
+  }
+}
