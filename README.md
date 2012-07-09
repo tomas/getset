@@ -33,9 +33,7 @@ config.load('/file/that/will/be/read/asynchronously', function(err){
   })
 
   config.watch();
-
 })
-
 ```
 
 Features
