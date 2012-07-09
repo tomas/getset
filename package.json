@@ -1,7 +1,9 @@
 {
   "name": "getset",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Easier handling of configuration for client-based apps.",
+  "author": "Tomás Pollak <tomas@forkhq.com>",
+  "repository": { "type": "git", "url": "https://github.com/tomas/getset.git" },
   "main": "index.js",
   "dependencies": {
     "ini": "*"
