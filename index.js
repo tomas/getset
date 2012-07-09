@@ -30,8 +30,8 @@ Getset.prototype.load = function(file, replace, callback){
 
   var self = this;
   if (typeof replace == 'function'){
-  	callback = replace;
-  	replace = null;
+    callback = replace;
+    replace = null;
   }
 
   if (!callback) return this.loadSync(file, replace);
@@ -39,7 +39,7 @@ Getset.prototype.load = function(file, replace, callback){
   this.read(file, function(err, values){
     if (err) return callback(err);
 
-	  self.loaded(file);
+    self.loaded(file);
     callback(null, self.merge(values, replace));
   })
 
@@ -52,7 +52,7 @@ Getset.prototype.load = function(file, replace, callback){
  * @return {Object} Getset object.
  */
 Getset.prototype.reload = function(callback){
-	return this.load(this._file, true, callback);
+  return this.load(this._file, true, callback);
 };
 
 /**
@@ -61,26 +61,26 @@ Getset.prototype.reload = function(callback){
  * @return {Object} Getset object.
  */
 Getset.prototype.watch = function(callback){
-	if(this._watching) return callback(new Error("Watch already set."));
+  if(this._watching) return callback(new Error("Watch already set."));
 
-	var self = this, error;
-	this._watching = true;
+  var self = this, error;
+  this._watching = true;
 
-	try{
+  try{
 
-		fs.watch(this._file, function(event, filename) {
-			if(event == 'change') self.reload(function(err){
-				if(!err) self.emit('changed');
-				// we pass a callback to use the async version of load
-			});
-		});
+    fs.watch(this._file, function(event, filename) {
+      if(event == 'change') self.reload(function(err){
+        if(!err) self.emit('changed');
+        // we pass a callback to use the async version of load
+      });
+    });
 
-	} catch(e){
-		error = e;
-	}
+  } catch(e){
+    error = e;
+  }
 
-	callback && callback(error);
-	return this;
+  callback && callback(error);
+  return this;
 
 }
 
@@ -89,8 +89,8 @@ Getset.prototype.watch = function(callback){
  * @return {null}
  */
 Getset.prototype.unwatch = function(callback){
-	if(!this._watching) return;
-	fs.unwatchFile(this._file);
+  if(!this._watching) return;
+  fs.unwatchFile(this._file);
 }
 
 /**
@@ -185,8 +185,8 @@ Getset.prototype.set = function(key, val, force){
  * @return {String/Undefined} Depending if the value was set or not.
  */
 Getset.prototype.update = function(key, val, callback){
-	if (this.set(key, val))
-		this.save(callback);
+  if (this.set(key, val))
+    this.save(callback);
 }
 
 /**
@@ -199,8 +199,8 @@ Getset.prototype.save = function(callback){
 
   var self = this;
   fs.writeFile(this._file, ini.encode(this._values), function(err){
-  	self._modified = false;
-  	callback && callback(err);
+    self._modified = false;
+    callback && callback(err);
   });
 }
 
