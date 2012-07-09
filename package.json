@@ -1,7 +1,7 @@
 {
   "name": "getset",
   "version": "0.1.0",
-  "description": "Configuration-o-matic.",
+  "description": "Easier handling of configuration for client-based apps.",
   "main": "index.js",
   "dependencies": {
     "ini": "*"
