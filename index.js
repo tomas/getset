@@ -7,7 +7,7 @@
 
 var fs = require('fs'),
     path_resolve = require('path').resolve,
-    ini = require('ini'),
+    ini = require('./lib/ini2'),
     helpers = require('./helpers'),
     util = require('util'),
     Emitter = require('events').EventEmitter;
@@ -16,6 +16,7 @@ var Getset = function(){
   this._loaded = false;
   // this._file   = null;
   this._values = {};
+  this._comments = {};
 };
 
 util.inherits(Getset, Emitter);
@@ -36,11 +37,12 @@ Getset.prototype.load = function(file, replace, callback){
 
   if (!callback) return this.loadSync(file, replace);
 
-  this.read(file, function(err, values){
+  this.read(file, function(err, result){
     if (err) return callback(err);
 
+    self._comments = result.comments;
     self.loaded(file);
-    callback(null, self.merge(values, replace));
+    callback(null, self.merge(result.values, replace));
   })
 
   return this;
@@ -195,10 +197,13 @@ Getset.prototype.update = function(key, val, callback){
  * @return {null}
  */
 Getset.prototype.save = function(callback){
+
   if (!this._file) return callback && callback(new Error("No file set."));
 
   var self = this;
-  fs.writeFile(this._file, ini.encode(this._values), function(err){
+  var opts = {comments: this._comments};
+
+  fs.writeFile(this._file, ini.encode(this._values, opts), function(err){
     self._modified = false;
     callback && callback(err);
   });
@@ -211,7 +216,12 @@ Getset.prototype.save = function(callback){
  * @return {Object} Config instance.
  */
 Getset.prototype.merge = function(opts, replace){
-  this._values = helpers.mixin(this._values, opts, replace);
+  return this.merge_data('values', opts, replace);
+}
+
+Getset.prototype.merge_data = function(what, opts, replace){
+  var key = '_' + what;
+  this[key] = helpers.mixin(this[key], opts, replace);
   this._modified = true;
   return this;
 }
@@ -223,7 +233,7 @@ Getset.prototype.merge = function(opts, replace){
  * @return {null}
  */
 Getset.prototype.sync = function(other_file, callback){
-  if(!this._loaded) return callback(new Error("Cannot sync, not loaded yet."));
+  if(!this._loaded) return callback && callback(new Error("Please load first."));
 
   var self = this;
   this.load(other_file, function(err){
@@ -249,7 +259,9 @@ Getset.prototype.loaded = function(file){
  * @return {Object} Getset instance.
  */
 Getset.prototype.loadSync = function(file, replace){
-  this.merge(this.readSync(file), replace);
+  var result = this.readSync(file);
+  this._comments = result.comments;
+  this.merge(result.values, replace);
   this.loaded(file);
   return this;
 };
@@ -264,7 +276,7 @@ Getset.prototype.readSync = function(file){
     var data = fs.readFileSync(file);
     return ini.decode(data.toString());
   } catch (e) {
-    return {};
+    return {values: {}, comments: {}};
   }
 }
 
