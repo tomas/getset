@@ -27,23 +27,18 @@ util.inherits(Getset, Emitter);
  * @param {Function} [callback="(null)"] Callback for asynchronous load.
  * @return {Object} Getset object.
  */
-Getset.prototype.load = function(file, replace, callback){
+Getset.prototype.load = function(file, callback){
 
   var self = this;
-  if (typeof replace == 'function'){
-    callback = replace;
-    replace = null;
-  }
-
-  if (!callback) return this.loadSync(file, replace);
+  if (!callback) return this.loadSync(file);
 
   this.read(file, function(err, result){
     if (err) return callback(err);
 
     self._comments = result.comments;
     self.loaded(file);
-    callback(null, self.merge(result.values, replace));
-  })
+    callback(null, self.merge(result.values));
+  });
 
   return this;
 }
@@ -236,9 +231,21 @@ Getset.prototype.sync = function(other_file, callback){
   if(!this._loaded) return callback && callback(new Error("Please load first."));
 
   var self = this;
-  this.load(other_file, function(err){
-    if (!err) self.save(callback);
-  })
+  this.read(other_file, function(err, result){
+    if (err) return callback(err);
+
+    // merge comments, replacing old ones with new ones
+    self.merge_data('comments', result.comments, true);
+
+    // add new key/vals to values
+    self.merge_data('values', result.values);
+
+    // remove unexisting keys in new file
+    self._values = helpers.intersect(self._values, result.values);
+
+    self.save(callback);
+  });
+
 }
 
 /**
@@ -258,10 +265,10 @@ Getset.prototype.loaded = function(file){
  * @param {String} file Location of file to read from.
  * @return {Object} Getset instance.
  */
-Getset.prototype.loadSync = function(file, replace){
+Getset.prototype.loadSync = function(file){
   var result = this.readSync(file);
   this._comments = result.comments;
-  this.merge(result.values, replace);
+  this.merge(result.values, true);
   this.loaded(file);
   return this;
 };
