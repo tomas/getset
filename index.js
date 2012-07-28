@@ -184,6 +184,8 @@ Getset.prototype.set = function(key, val, force){
 Getset.prototype.update = function(key, val, callback){
   if (this.set(key, val))
     this.save(callback);
+  else
+    callback && callback(new Error('Unable to set value for key: ' + key));
 }
 
 /**
