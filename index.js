@@ -13,8 +13,7 @@ var fs = require('fs'),
     Emitter = require('events').EventEmitter;
 
 var Getset = function(){
-  this._loaded = false;
-  // this._file   = null;
+  this._file   = null;
   this._values = {};
   this._comments = {};
 };
@@ -29,7 +28,8 @@ util.inherits(Getset, Emitter);
  */
 Getset.prototype.load = function(file, callback){
 
-	if (!file || file == "") throw("Invalid file path.");
+  if (!file || file == "") throw("Invalid file path.");
+  if (this._file) throw("Already loaded: " + this._file);
 
   var self = this;
   if (!callback) return this.loadSync(file);
@@ -46,12 +46,26 @@ Getset.prototype.load = function(file, callback){
 }
 
 /**
+ * Unloads values and sets file to null, so a new one can be loaded.
+ * @return {Object} Getset object.
+ */
+Getset.prototype.unload = function(){
+  this._values = {};
+  this._comments = {};
+  this._file = null;
+  return this;
+};
+
+
+/**
  * Reload config file, merging new values with existing ones.
  * @param {Function} [callback="(null)"] Callback for asynchronous load.
  * @return {Object} Getset object.
  */
 Getset.prototype.reload = function(callback){
-  return this.load(this._file, true, callback);
+  var file = this._file;
+  this._file = null; // so it doesn't throw
+  return this.load(this._file, callback);
 };
 
 /**
@@ -170,7 +184,7 @@ Getset.prototype.get = function(key, subkey){
  */
 Getset.prototype.set = function(key, val, force){
   if (typeof val == 'undefined' ||
-    (!force && typeof this._values[key] == 'undefined')) return;
+    (!force && this._file && typeof this._values[key] == 'undefined')) return;
 
   var opts = {};
   opts[key] = val;
@@ -197,7 +211,7 @@ Getset.prototype.update = function(key, val, callback){
  */
 Getset.prototype.save = function(callback){
 
-  if (!this._file) return callback && callback(new Error("No file set."));
+  if (!this._file) return callback ? callback(new Error("No file set.")) : false;
 
   var self = this;
   var opts = {comments: this._comments};
@@ -206,6 +220,8 @@ Getset.prototype.save = function(callback){
     self._modified = false;
     callback && callback(err);
   });
+
+  return this;
 }
 
 
@@ -232,7 +248,7 @@ Getset.prototype.merge_data = function(what, opts, replace){
  * @return {null}
  */
 Getset.prototype.sync = function(other_file, callback){
-  if(!this._loaded) return callback && callback(new Error("Please load first."));
+  if (!this._file) return callback && callback(new Error("Please load first."));
 
   var self = this;
   this.read(other_file, function(err, result){
@@ -258,9 +274,8 @@ Getset.prototype.sync = function(other_file, callback){
  * @return {null} Getset object.
  */
 Getset.prototype.loaded = function(file){
-  if (this._file) return;
+  // if (this._file) return;
   this._file = path_resolve(file);
-  this._loaded = true;
   this._modified = false;
 }
 
