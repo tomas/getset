@@ -1,7 +1,14 @@
 var should = require('should'),
     sinon  = require('sinon'),
     getset = require('./../'),
-    fs = require('fs'),
+    fs = require('fs');
+
+var basedir = __dirname + '/fixtures',
+    valid = basedir + '/valid.ini',
+    empty = basedir + '/empty.ini',
+    invalid = basedir + '/invalid.ini',
+    missing_file = basedir + '/missing.ini',
+    missing_dir = '/not/found',
     call, file;
 
 // utility function
@@ -24,16 +31,23 @@ describe('loading', function(){
 			}
 		})
 
+		it('should raise error when called twice', function(){
+			var err = false;
+			getset.load(valid);
+			try { getset.load(valid) } catch(e) { err = e };
+			err.should.not.be.false;
+		})
+
 		it('should read file synchronously', function(){
 			var loadSync = sinon.spy(getset, "loadSync");
-			call('/some/file');
-			loadSync.withArgs('/some/file').calledOnce.should.be.true;
+			call(valid);
+			loadSync.withArgs(valid).calledOnce.should.be.true;
 			loadSync.restore();
 		})
 
 		it('should return instance of config', function(){
 			// should have the functions we know of
-			call('/some/file').loadSync.should.exist;
+			call(valid).loadSync.should.exist;
 		})
 
 		describe('and file is null', function(){
@@ -50,7 +64,7 @@ describe('loading', function(){
 
 			it('should not raise an error', function(){
 				var err = false;
-				try { call('nonexisting_file') } catch(e) { err = e }
+				try { call(missing_file) } catch(e) { err = e }
 				err.should.be.false;
 			})
 
@@ -58,17 +72,11 @@ describe('loading', function(){
 
 		describe('and file exists', function(){
 
-			file = '/tmp/test.ini';
-
 			describe('and file is empty', function(){
 
-				before(function(){
-					createFile('')
-					fs.existsSync(file).should.be.true;
-				})
-
 				it('should keep an empty set of values', function(){
-					call(file);
+					fs.existsSync(empty).should.be.true;
+					call(empty);
 					Object.keys(getset._values).should.be.empty;
 				})
 
@@ -76,12 +84,8 @@ describe('loading', function(){
 
 			describe('and file is not a valid INI', function(){
 
-				before(function(){
-					createFile('<html>\n<head>\n<title>\n</head>\n<body>\n<img />\n</body>\n</html>');
-				})
-
 				it('should keep empty set of values', function(){
-					call(file);
+					call(invalid);
 					Object.keys(getset._values).should.be.empty;
 				})
 
@@ -89,13 +93,11 @@ describe('loading', function(){
 
 			describe('and file is a valid INI', function(){
 
-				before(function(){
-					createFile("foo = bar\nbar = baz\n[section]\n\n;comment\njoe = the plumber\n\n")
-				})
-
 				it('should load values in memory', function(){
-					call(file);
-					Object.keys(getset._values).length.should.eql(3);
+					call(valid);
+					getset._file.should.eql(valid);
+					Object.keys(getset._values).should.eql(['foo', 'bar', 'section-one', 'other_section']);
+					getset.get('section-one').should.eql({'hello': 'world'});
 				})
 
 			})
@@ -117,16 +119,26 @@ describe('loading', function(){
 			}
 		})
 
-		it('should read file asynchronously', function(done){
+		it('should raise error when called twice', function(done){
 
+			createFile('test', '/tmp/existing')
+
+			var err = false;
+			call(valid, function(){
+				try { call(valid) } catch(e) { err = e }
+				err.should.not.be.false;
+				done();
+			});
+		})
+
+		it('should read file asynchronously', function(done){
 			var loadSync = sinon.spy(getset, "loadSync");
 
-			call('/some/file', function(){
+			call(valid, function(){
 				loadSync.called.should.be.false;
 				loadSync.restore();
 				done();
 			});
-
 		})
 
 		describe('and file is null', function(){
@@ -142,33 +154,24 @@ describe('loading', function(){
 		describe('and file does NOT exist', function(){
 
 			it('should callback with error', function(done){
-
 				var err = false;
 
-				call('/some/file', function(e){
+				call(missing_file, function(e){
 					err = e;
 					err.should.not.be.false;
 					done();
 				})
-
 			})
 
 		})
 
 		describe('and file exists', function(){
 
-			file = '/tmp/test.ini';
-
 			describe('and file is empty', function(){
 
-				before(function(){
-					createFile('', file + 1)
-					fs.existsSync(file + 1).should.be.true;
-				})
-
 				it('should keep an empty set of values', function(done){
-					call(file + 1, function(err, config){
-						config._file.should.eql(file + 1);
+					call(empty, function(err, config){
+						config._file.should.eql(empty);
 						Object.keys(config._values).should.be.empty;
 						done();
 					});
@@ -178,13 +181,9 @@ describe('loading', function(){
 
 			describe('and file is not a valid INI', function(){
 
-				before(function(){
-					createFile('<html>\n<head>\n<title>\n</head>\n<body>\n<img />\n</body>\n</html>', file + 2);
-				})
-
 				it('should keep empty set of values', function(done){
-					call(file + 2, function(err, config){
-						getset._file.should.eql(file + 2);
+					call(invalid, function(err, config){
+						getset._file.should.eql(invalid);
 						Object.keys(getset._values).should.be.empty;
 						done();
 					});
@@ -194,15 +193,11 @@ describe('loading', function(){
 
 			describe('and file is a valid INI', function(){
 
-				before(function(){
-					createFile("foo = bar\nbar = baz\n[section]\n\n;comment\njoe = the plumber\n\n", file + 3)
-				})
-
 				it('should load values in memory', function(done){
-					call(file + 3, function(err, config){
-						getset._file.should.eql(file + 3);
-						Object.keys(getset._values).should.eql(['foo', 'bar', 'section']);
-						Object.keys(getset._values['section']).should.eql(['joe']);
+					call(valid, function(err, config){
+						getset._file.should.eql(valid);
+						Object.keys(getset._values).should.eql(['foo', 'bar', 'section-one', 'other_section']);
+						getset.get('section-one').should.eql({'hello': 'world'});
 						done();
 					});
 				})
