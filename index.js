@@ -224,7 +224,6 @@ Getset.prototype.save = function(callback){
   return this;
 }
 
-
 /**
  * Merges [opts] into values, only replacing if [replace] is true
  * @param {Object} opts Key-value hash containing config values.
