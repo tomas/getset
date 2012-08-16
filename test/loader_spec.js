@@ -201,7 +201,8 @@ describe('loading', function(){
 				it('should load values in memory', function(done){
 					call(file + 3, function(err, config){
 						getset._file.should.eql(file + 3);
-						Object.keys(getset._values).length.should.eql(3);
+						Object.keys(getset._values).should.eql(['foo', 'bar', 'section']);
+						Object.keys(getset._values['section']).should.eql(['joe']);
 						done();
 					});
 				})
