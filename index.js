@@ -29,6 +29,8 @@ util.inherits(Getset, Emitter);
  */
 Getset.prototype.load = function(file, callback){
 
+	if (!file || file == "") throw("Invalid file path.");
+
   var self = this;
   if (!callback) return this.loadSync(file);
 
