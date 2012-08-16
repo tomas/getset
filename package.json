@@ -5,5 +5,13 @@
   "author": "Tomás Pollak <tomas@forkhq.com>",
   "repository": { "type": "git", "url": "https://github.com/tomas/getset.git" },
   "tags": ["config", "settings", "options", "ini", "setup", "update", "upgrade"],
-  "main": "index.js"
+  "main": "index.js",
+  "devDependencies": {
+    "mocha" : "",
+    "should": "",
+    "sinon" : ""
+  },
+  "scripts": {
+    "test"  : "mocha"
+  }
 }
