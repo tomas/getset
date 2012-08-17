@@ -27,6 +27,7 @@ describe('loading', function(){
 
 		it('should raise error when called twice', function(){
 			var err = false;
+			getset.unload();
 			getset.load(valid);
 			try { getset.load(valid) } catch(e) { err = e };
 			err.should.not.be.false;
