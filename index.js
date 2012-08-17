@@ -53,6 +53,7 @@ Getset.prototype.unload = function(){
   this._values = {};
   this._comments = {};
   this._file = null;
+  this._modified = false;
   return this;
 };
 
@@ -199,9 +200,9 @@ Getset.prototype.set = function(key, val, force){
  */
 Getset.prototype.update = function(key, val, callback){
   if (this.set(key, val))
-    this.save(callback);
+    return this.save(callback);
   else
-    callback && callback(new Error('Unable to set value for key: ' + key));
+    return callback ? callback(new Error('Unable to set value for key: ' + key)) : false;
 }
 
 /**
@@ -210,7 +211,6 @@ Getset.prototype.update = function(key, val, callback){
  * @return {null}
  */
 Getset.prototype.save = function(callback){
-
   if (!this._file) return callback ? callback(new Error("No file set.")) : false;
 
   var self = this;
@@ -247,11 +247,14 @@ Getset.prototype.merge_data = function(what, opts, replace){
  * @return {null}
  */
 Getset.prototype.sync = function(other_file, callback){
-  if (!this._file) return callback && callback(new Error("Please load first."));
+  if (!this._file) throw("No file set.");
 
   var self = this;
   this.read(other_file, function(err, result){
     if (err) return callback(err);
+    
+    if (Object.keys(result.values).length == 0)
+      return callback(new Error("No values found."))
 
     // merge comments, replacing old ones with new ones
     self.merge_data('comments', result.comments, true);
