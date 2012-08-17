@@ -1,5 +1,5 @@
 exports.guess_type = function(obj){
-  if(typeof obj != 'string') return obj;
+  if (typeof obj != 'string') return obj;
 
   var str = obj.trim();
 
@@ -21,9 +21,9 @@ exports.mixin = function(target, source, replace){
 
   Object.keys(source).forEach(function(key) {
 
-    if (typeof source[key] == 'object')
+    if (typeof source[key] == 'object' && typeof source[key].length == 'undefined')
       target[key] = exports.mixin(target[key] || {}, source[key], replace);
-    else if(replace || typeof target[key] == 'undefined')
+    else if (replace || typeof target[key] == 'undefined')
       target[key] = source[key];
 
   });
