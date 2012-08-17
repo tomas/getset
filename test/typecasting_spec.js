@@ -91,8 +91,36 @@ describe('types', function(){
 
 	it('should save & load arrays correctly', function(done){
 		
-		setget('numbers', ['1,2,3'], function(gs){
-			gs.get('numbers').should.eql(['1,2,3']);
+		setget('numbers', [1,2,3], function(gs){
+			gs.get('numbers').should.eql([1,2,3]);
+			done();
+		})
+		
+	})
+
+	it('should return native values for elements in array', function(done){
+		
+		setget('elements', ['foo', true, 100], function(gs){
+			gs.get('elements').should.eql(['foo', true, 100]);
+			done();
+		})
+		
+	})
+
+	it('should verify array indexes', function(done){
+		
+		setget('test', {0: 'asdasd', 1: 'test', 3: '12312'}, function(gs){
+		  should.equal(gs.get('test').length, null); // not array
+			gs.get('test').should.eql({0: 'asdasd', 1: 'test', 3: '12312'});
+			done();
+		})
+		
+	})
+
+	it('should not confuse arrays with hashes', function(done){
+		
+		setget('music', {0: 'asdasd', foo: 'bar'}, function(gs){
+			gs.get('music').should.eql({0: 'asdasd', foo: 'bar'});
 			done();
 		})
 		
