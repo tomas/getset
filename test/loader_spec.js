@@ -11,12 +11,6 @@ var basedir = __dirname + '/fixtures',
     missing_dir = '/not/found',
     call, file;
 
-// utility function
-var createFile = function(content, filename){
-	filename = filename || file;
-	fs.writeFileSync(filename, content);
-}
-
 describe('loading', function(){
 
 	afterEach(function(){
@@ -120,8 +114,6 @@ describe('loading', function(){
 		})
 
 		it('should raise error when called twice', function(done){
-
-			createFile('test', '/tmp/existing')
 
 			var err = false;
 			call(valid, function(){
