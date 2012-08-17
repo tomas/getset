@@ -56,6 +56,11 @@ describe('setting', function(){
 				should.equal(getset.get('something'), null);
 			})
 
+			it('should set value if forced', function(){
+				getset.set('something', 'too', true);
+				getset.get('something').should.eql('too');
+			})
+
 		})
 
 	})
