@@ -83,8 +83,8 @@ Getset.prototype.watch = function(callback){
   try{
 
     fs.watch(this._file, function(event, filename) {
-      if(event == 'change') self.reload(function(err){
-        if(!err) self.emit('changed');
+      if (event == 'change') self.reload(function(err){
+        if (!err) self.emit('changed');
         // we pass a callback to use the async version of load
       });
     });
@@ -137,7 +137,7 @@ Getset.prototype.read = function(file, callback){
  * @param {Function} callback Callback for asyncronous response.
  * @return {Boolean} True/false depending if file exists or not.
  */
-Getset.prototype.persisted = function(callback){
+Getset.prototype.present = function(callback){
   if (!callback) return fs.existsSync(this._file);
   fs.exists(this._file, callback);
 }
@@ -211,12 +211,16 @@ Getset.prototype.update = function(key, val, callback){
  * @return {null}
  */
 Getset.prototype.save = function(callback){
-  if (!this._file) return callback ? callback(new Error("No file set.")) : false;
+  if (!this._file) return callback && callback(new Error("No file set."));
 
-  var self = this;
-  var opts = {comments: this._comments};
+  var self = this,
+      opts = {comments: this._comments},
+      str = ini.encode(this._values, opts)
 
-  fs.writeFile(this._file, ini.encode(this._values, opts), function(err){
+  if (str.indexOf('[object Object]') != -1)
+    return callback && callback(new Error('Error merging values.'));
+
+  fs.writeFile(this._file, str, function(err){
     self._modified = false;
     callback && callback(err);
   });
@@ -252,7 +256,7 @@ Getset.prototype.sync = function(other_file, callback){
   var self = this;
   this.read(other_file, function(err, result){
     if (err) return callback(err);
-    
+
     if (Object.keys(result.values).length == 0)
       return callback(new Error("No values found."))
 
