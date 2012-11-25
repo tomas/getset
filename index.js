@@ -220,10 +220,20 @@ Getset.prototype.save = function(callback){
   if (str.indexOf('[object Object]') != -1)
     return callback && callback(new Error('Error merging values.'));
 
-  fs.writeFile(this._file, str, function(err){
-    self._modified = false;
-    callback && callback(err);
-  });
+  fs.readFile(this._file, function(err, data){
+    if (err) return callback && callback(err);
+
+    if (data.toString().trim() === str.trim()) { // no changes
+      this._modified = false;
+      return callback && callback();
+    }
+
+    fs.writeFile(self._file, str, function(err){
+      self._modified = false;
+      callback && callback(err);
+    });
+
+  })
 
   return this;
 }
@@ -271,7 +281,6 @@ Getset.prototype.sync = function(other_file, callback){
 
     self.save(callback);
   });
-
 }
 
 /**
