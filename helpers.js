@@ -1,5 +1,5 @@
 var looks_like_array = function(obj){
-  return typeof(obj) == 'object' && Object.keys(obj)[0] == '0';
+  return typeof(obj) == 'object' && Object.keys(obj)[0] === '0';
 }
 
 var is_number = function(str){
@@ -65,20 +65,7 @@ exports.mixin = function(target, source, replace){
 exports.intersect = function(target, source){
 
   Object.keys(target).forEach(function(key) {
-
-    if (typeof source[key] == 'undefined')
-      delete target[key];
-
-  });
-
-  return target;
-}
-
-// returns target
-exports.intersect = function(target, source){
-
-  Object.keys(target).forEach(function(key) {
-    if(typeof source[key] == 'undefined')
+    if (typeof source[key] === 'undefined')
       delete target[key];
   });
 
