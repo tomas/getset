@@ -1,5 +1,5 @@
 var looks_like_array = function(obj){
-	return typeof(obj) == 'object' && Object.keys(obj)[0] == '0';
+  return typeof(obj) == 'object' && Object.keys(obj)[0] == '0';
 }
 
 var is_number = function(str){
