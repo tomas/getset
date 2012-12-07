@@ -157,7 +157,7 @@ Getset.prototype.writable = function(callback){
   }
 
   var returned = false;
-  var stream = fs.createWriteStream(this._file);
+  var stream = fs.createWriteStream(this._file, { flags: 'a' });
   stream.on('error', done);
   setTimeout(done, 10);
   stream.destroy();
@@ -221,9 +221,9 @@ Getset.prototype.save = function(callback){
     return callback && callback(new Error('Error merging values.'));
 
   fs.readFile(this._file, function(err, data){
-    if (err) return callback && callback(err);
+    // if (err) return callback && callback(err);
 
-    if (data.toString().trim() === str.trim()) { // no changes
+    if (data && data.toString().trim() === str.trim()) { // no changes
       this._modified = false;
       return callback && callback();
     }
