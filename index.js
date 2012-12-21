@@ -7,14 +7,14 @@
 
 var fs = require('fs'),
     path_resolve = require('path').resolve,
-    ini = require('./lib/ini2'),
+    parser  = require('./lib/parser'),
     helpers = require('./helpers'),
-    util = require('util'),
+    util    = require('util'),
     Emitter = require('events').EventEmitter;
 
 var Getset = function(){
-  this._file   = null;
-  this._values = {};
+  this._file     = null;
+  this._values   = {};
   this._comments = {};
 };
 
@@ -118,7 +118,7 @@ Getset.prototype.read = function(file, callback){
 
   fs.readFile(file, function(err, data){
     if (err) return callback(err);
-    callback(null, ini.decode(data.toString()));
+    callback(null, parser.decode(data.toString()));
   });
 }
 
@@ -215,7 +215,7 @@ Getset.prototype.save = function(callback){
 
   var self = this,
       opts = {comments: this._comments},
-      str = ini.encode(this._values, opts)
+      str = parser.encode(this._values, opts)
 
   if (str.indexOf('[object Object]') != -1)
     return callback && callback(new Error('Error merging values.'));
@@ -315,7 +315,7 @@ Getset.prototype.loadSync = function(file){
 Getset.prototype.readSync = function(file){
   try {
     var data = fs.readFileSync(file);
-    return ini.decode(data.toString());
+    return parser.decode(data.toString());
   } catch (e) {
     return {values: {}, comments: {}};
   }
