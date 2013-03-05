@@ -224,7 +224,7 @@ Getset.prototype.save = function(callback){
     // if (err) return callback && callback(err);
 
     if (data && data.toString().trim() === str.trim()) { // no changes
-      this._modified = false;
+      self._modified = false;
       return callback && callback();
     }
 
