@@ -75,7 +75,7 @@ Getset.prototype.reload = function(callback){
  * @return {Object} Getset object.
  */
 Getset.prototype.watch = function(callback){
-  if(this._watching) return callback(new Error("Watch already set."));
+  if (this._watching) return callback(new Error("Watch already set."));
 
   var self = this, error;
   this._watching = true;
@@ -103,8 +103,9 @@ Getset.prototype.watch = function(callback){
  * @return {null}
  */
 Getset.prototype.unwatch = function(callback){
-  if(!this._watching) return;
+  if (!this._watching) return;
   fs.unwatchFile(this._file);
+  this._watching = false;
 }
 
 /**
