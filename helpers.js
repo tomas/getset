@@ -53,7 +53,9 @@ exports.mixin = function(target, source, replace){
 
     if (typeof source[key] == 'object' && typeof source[key].length == 'undefined')
       target[key] = exports.mixin(target[key] || {}, source[key], replace);
-    else if (replace || typeof target[key] == 'undefined')
+    else if (replace === true || typeof target[key] == 'undefined')
+      target[key] = source[key];
+    else if (replace == 'nonempty' && source[key] != '')
       target[key] = source[key];
 
   });

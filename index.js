@@ -67,7 +67,7 @@ Getset.prototype.unload = function(){
 Getset.prototype.reload = function(callback){
   var file = this._file;
   this._file = null; // so it doesn't throw
-  return this.load(this._file, callback);
+  return this.load(file, callback);
 };
 
 /**
@@ -81,7 +81,7 @@ Getset.prototype.watch = function(callback){
   var self = this, error;
   this._watching = true;
 
-  try{
+  try {
 
     fs.watch(this._file, function(event, filename) {
       if (event == 'change') self.reload(function(err){
@@ -90,13 +90,12 @@ Getset.prototype.watch = function(callback){
       });
     });
 
-  } catch(e){
+  } catch(e) {
     error = e;
   }
 
   callback && callback(error);
   return this;
-
 }
 
 /**
@@ -262,8 +261,15 @@ Getset.prototype.merge_data = function(what, opts, replace){
  * @param {Function} callback Callback to check if fs.writeFile was successful.
  * @return {null}
  */
-Getset.prototype.sync = function(other_file, callback){
+Getset.prototype.sync = function(other_file, replace, callback){
   if (!this._file) throw("No file set.");
+  
+  var replace_values = false;
+
+  if (typeof replace == 'function')
+    callback = replace;
+  else
+    replace_values = replace;
 
   var self = this;
   this.read(other_file, function(err, result){
@@ -279,7 +285,7 @@ Getset.prototype.sync = function(other_file, callback){
     self.merge_data('comments', result.comments, true);
 
     // add new key/vals to values
-    self.merge_data('values', result.values);
+    self.merge_data('values', result.values, replace_values);
 
     // remove unexisting keys in new file
     self._values = helpers.intersect(self._values, result.values);
