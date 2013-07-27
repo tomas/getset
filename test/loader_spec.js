@@ -91,7 +91,7 @@ describe('loading', function(){
         it('should load values in memory', function(){
           call(valid);
           getset._file.should.eql(valid);
-          Object.keys(getset._values).should.eql(['foo', 'bar', 'section-one', 'other_section']);
+          Object.keys(getset._values).should.eql(['foo', 'bar', 'boo', 'section-one', 'other_section']);
           getset.get('section-one').should.eql({'hello': 'world'});
         })
 
@@ -189,7 +189,7 @@ describe('loading', function(){
         it('should load values in memory', function(done){
           call(valid, function(err, config){
             getset._file.should.eql(valid);
-            Object.keys(getset._values).should.eql(['foo', 'bar', 'section-one', 'other_section']);
+            Object.keys(getset._values).should.eql(['foo', 'bar', 'boo', 'section-one', 'other_section']);
             getset.get('section-one').should.eql({'hello': 'world'});
             done();
           });
