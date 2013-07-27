@@ -3,13 +3,13 @@ var should = require('should'),
     getset = require('./../'),
     fs = require('fs');
 
-var basedir = __dirname + '/fixtures',
-    valid = basedir + '/valid.ini',
-    empty = basedir + '/empty.ini',
-    invalid = basedir + '/invalid.ini',
+var basedir      = __dirname + '/fixtures',
+    valid        = basedir + '/valid.ini',
+    empty        = basedir + '/empty.ini',
+    invalid      = basedir + '/invalid.ini',
     missing_file = basedir + '/missing.ini',
-    commented = basedir + '/commented.ini',
-    modified = basedir + '/modified.ini',
+    commented    = basedir + '/commented.ini',
+    modified     = basedir + '/modified.ini',
     modified_with_comments = basedir + '/modified_with_comments.ini',
     call, file, previous_values, previous_comments;
 
@@ -124,34 +124,6 @@ describe('syncing', function(){
         })
       })
 
-      it('should add new keys to original', function(done){
-        getset._values.should.eql(previous_values);
-        getset.sync(modified, function(err){
-          Object.keys(getset._values).should.eql([ 'foo', 'bar', 'section-one', 'renamed_section', 'new_section' ]);
-          done();
-        });
-      })
-
-      it('should not update values for existing keys', function(done){
-
-        getset.get('bar').should.eql(2);
-        getset.sync(modified, function(err){
-          getset.get('bar').should.eql(2);
-          done();
-        });
-
-      })
-
-      it('should remove keys that were removed', function(done){
-
-        getset.get('foo').should.eql('test');
-        getset.sync(commented, function(err){
-          should.equal(getset.get('foo'), null);
-          done();
-        });
-
-      })
-
       it('should add new comments to original', function(done){
 
         should.equal(getset._comments['bar'], null);
@@ -188,6 +160,108 @@ describe('syncing', function(){
           Object.keys(getset._comments).length.should.eql(3);
           done();
         });
+
+      })
+
+      describe('in non replacing mode', function(){
+
+        it('should add new keys to original', function(done){
+          getset._values.should.eql(previous_values);
+          getset.sync(modified, function(err){
+            Object.keys(getset._values).should.eql([ 'foo', 'bar', 'boo', 'section-one', 'renamed_section', 'new_section' ]);
+            done();
+          });
+        })
+
+        it('should not update values for existing keys', function(done){
+
+          getset.get('bar').should.eql(2);
+          getset.get('boo').should.eql('wazzup');
+          getset.sync(modified, function(err){
+            getset.get('bar').should.eql(2);
+            getset.get('boo').should.eql('wazzup');
+            done();
+          });
+
+        })
+
+        it('should remove keys that were removed', function(done){
+
+          getset.get('foo').should.eql('test');
+          getset.sync(commented, function(err){
+            should.equal(getset.get('foo'), null);
+            done();
+          });
+
+        })
+
+      })
+
+      describe('in "nonempty" replacing mode', function(){
+
+        it('should add new keys to original', function(done){
+          getset._values.should.eql(previous_values);
+          getset.sync(modified, 'nonempty', function(err){
+            Object.keys(getset._values).should.eql([ 'foo', 'bar', 'boo', 'section-one', 'renamed_section', 'new_section' ]);
+            done();
+          });
+        })
+
+        it('should update values for existing keys, if new one is not empty', function(done){
+
+          getset.get('bar').should.eql(2);
+          getset.get('boo').should.eql('wazzup');
+          getset.sync(modified, 'nonempty', function(err){
+            getset.get('bar').should.eql(223);
+            getset.get('boo').should.eql('wazzup');
+            done();
+          });
+
+        })
+
+        it('should remove keys that were removed', function(done){
+
+          getset.get('foo').should.eql('test');
+          getset.sync(commented, 'nonempty', function(err){
+            should.equal(getset.get('foo'), null);
+            done();
+          });
+
+        })
+
+      })
+
+      describe('in replacing mode', function(){
+
+        it('should add new keys to original', function(done){
+          getset._values.should.eql(previous_values);
+          getset.sync(modified, true, function(err){
+            Object.keys(getset._values).should.eql([ 'foo', 'bar', 'boo', 'section-one', 'renamed_section', 'new_section' ]);
+            done();
+          });
+        })
+
+        it('should update values for existing keys', function(done){
+
+          getset.get('bar').should.eql(2);
+          getset.get('boo').should.eql('wazzup');
+          getset.sync(modified, true, function(err){
+            getset.get('bar').should.eql(223);
+            getset._values['boo'].should.eql('');
+            done();
+          });
+
+        })
+
+        it('should remove keys that were removed', function(done){
+
+          getset.get('foo').should.eql('test');
+          getset.sync(commented, true, function(err){
+            should.equal(getset.get('foo'), null);
+            done();
+          });
+
+        })
 
       })
 
