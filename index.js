@@ -28,8 +28,8 @@ util.inherits(Getset, Emitter);
  */
 Getset.prototype.load = function(file, callback){
 
-  if (!file || file == "") throw("Invalid file path.");
-  if (this._file) throw("Already loaded: " + this._file);
+  if (!file || file == "") throw(new Error("Invalid file path."));
+  if (this._file) throw(new Error("Already loaded: " + this._file));
 
   var self = this;
   if (!callback) return this.loadSync(file);
@@ -261,7 +261,7 @@ Getset.prototype.merge_data = function(what, opts, replace){
  * @return {null}
  */
 Getset.prototype.sync = function(other_file, replace, callback){
-  if (!this._file) throw("No file set.");
+  if (!this._file) throw(new Error("No file set."));
   
   var replace_values = false;
 
