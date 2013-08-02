@@ -160,7 +160,7 @@ Getset.prototype.writable = function(callback){
   var returned = false;
   var stream = fs.createWriteStream(this._file, { flags: 'a' });
   stream.on('error', done);
-  setTimeout(done, 10);
+  setTimeout(done, 100);
   stream.destroy();
 }
 
