@@ -1,7 +1,3 @@
-var looks_like_array = function(obj){
-  return typeof(obj) == 'object' && Object.keys(obj)[0] === '0';
-}
-
 var is_number = function(str){
   return (str*1).toString() === str;
 }
