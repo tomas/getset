@@ -22,8 +22,8 @@ describe('syncing', function(){
     getset.unload();
 
     // once we're done, reset file contents back to normal
-    fs.writeFile(valid, valid_content);
-    fs.writeFile(commented, commented_content);
+    fs.writeFileSync(valid, valid_content);
+    fs.writeFileSync(commented, commented_content);
   })
 
   // once we're done, reset file contents back to normal
