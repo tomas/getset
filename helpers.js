@@ -25,7 +25,7 @@ exports.guess_type = function(obj){
     else
       return str;
 
-  } else if (looks_like_array(obj)) {
+  } else if (Array.isArray(obj)) {
     
     var values = [], last_index = -1;
     for (var i in obj){

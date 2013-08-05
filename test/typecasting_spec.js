@@ -5,7 +5,8 @@ var should = require('should'),
 
 var basedir = __dirname + '/fixtures',
     valid = basedir + '/valid.ini',
-    tmpfile = '/tmp/valid.ini';
+    tmpfile = '/tmp/valid.ini',
+    arrays  = basedir + '/arrays.ini';
 
 var data = fs.readFileSync(valid);
 
@@ -35,7 +36,9 @@ describe('types', function(){
   it('should save & load true as boolean', function(done){
 
     setget('is_this_awesome', true, function(gs){
-      gs.get('is_this_awesome').should.eql(true);
+      var val = gs.get('is_this_awesome');
+      val.should.be.a('boolean');
+      val.should.eql(true);
       done();
     })
 
@@ -44,7 +47,9 @@ describe('types', function(){
   it('should save & load false as boolean', function(done){
 
     setget('does_this_suck', false, function(gs){
-      gs.get('does_this_suck').should.eql(false);
+      var val = gs.get('does_this_suck');
+      val.should.be.a('boolean');
+      val.should.eql(false);
       done();
     })
 
@@ -53,7 +58,9 @@ describe('types', function(){
   it('should save & load number as number', function(done){
 
     setget('the answer to everything', 42, function(gs){
-      gs.get('the answer to everything').should.eql(42);
+      var val = gs.get('the answer to everything');
+      val.should.be.a('number');
+      val.should.eql(42);
       done();
     })
 
@@ -101,7 +108,8 @@ describe('types', function(){
   it('should return native values for elements in array', function(done){
 
     setget('elements', ['foo', true, 100], function(gs){
-      gs.get('elements').should.eql(['foo', true, 100]);
+      var el = gs.get('elements');
+      el.should.eql(['foo', true, 100]);
       done();
     })
 
