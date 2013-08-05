@@ -279,7 +279,8 @@ Getset.prototype.sync = function(other_file, replace, cb){
       return cb && cb(new Error("No values found."))
 
     // merge header, if present
-    if (result.header) self.merge_data('header', result.header, true);
+    if (result.header) 
+      self._header = result.header;
 
     // merge comments, replacing old ones with new ones
     self.merge_data('comments', result.comments, true);
