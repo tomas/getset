@@ -1,6 +1,6 @@
 {
   "name": "getset",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Easier handling of configuration for client-based apps.",
   "author": "Tomás Pollak <tomas@forkhq.com>",
   "repository": { "type": "git", "url": "https://github.com/tomas/getset.git" },
