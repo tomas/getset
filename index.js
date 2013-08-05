@@ -261,22 +261,22 @@ Getset.prototype.merge_data = function(what, opts, replace){
  * @param {Function} callback Callback to check if fs.writeFile was successful.
  * @return {null}
  */
-Getset.prototype.sync = function(other_file, replace, callback){
+Getset.prototype.sync = function(other_file, replace, cb){
   if (!this._file) throw(new Error("No file set."));
-  
+
   var replace_values = false;
 
   if (typeof replace == 'function')
-    callback = replace;
+    cb = replace;
   else
     replace_values = replace;
 
   var self = this;
   this.read(other_file, function(err, result){
-    if (err) return callback(err);
+    if (err) return cb && cb(err);
 
     if (Object.keys(result.values).length == 0)
-      return callback(new Error("No values found."))
+      return cb && cb(new Error("No values found."))
 
     // merge header, if present
     if (result.header) self.merge_data('header', result.header, true);
@@ -290,7 +290,7 @@ Getset.prototype.sync = function(other_file, replace, callback){
     // remove unexisting keys in new file
     self._values = helpers.intersect(self._values, result.values);
 
-    self.save(callback);
+    self.save(cb);
   });
 }
 

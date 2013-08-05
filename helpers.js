@@ -22,7 +22,7 @@ exports.guess_type = function(obj){
       return str;
 
   } else if (Array.isArray(obj)) {
-    
+
     var values = [], last_index = -1;
     for (var i in obj){
       last_index++;
@@ -34,7 +34,7 @@ exports.guess_type = function(obj){
     }
 
     return values;
- 
+
   } else {
 
     return obj;
@@ -45,15 +45,16 @@ exports.guess_type = function(obj){
 
 exports.mixin = function(target, source, replace){
 
-  Object.keys(source).forEach(function(key) {
+  if (!source || typeof source != 'object')
+    return target;
 
+  Object.keys(source).forEach(function(key) {
     if (typeof source[key] == 'object' && typeof source[key].length == 'undefined')
       target[key] = exports.mixin(target[key] || {}, source[key], replace);
     else if (replace === true || typeof target[key] == 'undefined')
       target[key] = source[key];
     else if (replace == 'nonempty' && source[key] != '')
       target[key] = source[key];
-
   });
 
   return target;
