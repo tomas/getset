@@ -37,6 +37,7 @@ Getset.prototype.load = function(file, callback){
   this.read(file, function(err, result){
     if (err) return callback(err);
 
+    if (result.header) self._header = result.header;
     self._comments = result.comments;
     self.loaded(file);
     callback(null, self.merge(result.values));
@@ -214,8 +215,8 @@ Getset.prototype.save = function(callback){
   if (!this._file) return callback && callback(new Error("No file set."));
 
   var self = this,
-      opts = {comments: this._comments},
-      str = parser.encode(this._values, opts)
+      opts = {header: this._header, comments: this._comments},
+      str  = parser.encode(this._values, opts)
 
   if (str.indexOf('[object Object]') != -1)
     return callback && callback(new Error('Error merging values.'));
@@ -277,6 +278,9 @@ Getset.prototype.sync = function(other_file, replace, callback){
     if (Object.keys(result.values).length == 0)
       return callback(new Error("No values found."))
 
+    // merge header, if present
+    if (result.header) self.merge_data('header', result.header, true);
+
     // merge comments, replacing old ones with new ones
     self.merge_data('comments', result.comments, true);
 
@@ -308,6 +312,7 @@ Getset.prototype.loaded = function(file){
  */
 Getset.prototype.loadSync = function(file){
   var result = this.readSync(file);
+  if (result.header) this._header = result.header;
   this._comments = result.comments;
   this.merge(result.values, true);
   this.loaded(file);
