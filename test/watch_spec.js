@@ -138,7 +138,10 @@ describe('unwatch', function() {
   describe('when watching', function() {
 
     before(function(done){
-      getset.load(temp_ini).watch(done);
+      getset.load(temp_ini).watch(function(){
+        should.exist(getset._watcher);
+        done();
+      });
     })
 
     it('does not emit any other events', function(done) {
