@@ -12,6 +12,11 @@ var fs = require('fs'),
     util    = require('util'),
     Emitter = require('events').EventEmitter;
 
+var debug = function(str) {
+  if (process.env.DEBUG && process.stdout.writable)
+    process.stdout.write(str + '\n');
+}
+
 var Getset = function(){
   this._file     = null;
   this._values   = {};
@@ -28,8 +33,8 @@ util.inherits(Getset, Emitter);
  */
 Getset.prototype.load = function(file, callback){
 
-  if (!file || file == "") throw(new Error("Invalid file path."));
-  if (this._file) throw(new Error("Already loaded: " + this._file));
+  if (!file || file == '') throw(new Error('Invalid file path.'));
+  if (this._file) throw(new Error('Already loaded: ' + this._file));
 
   var self = this;
   if (!callback) return this.loadSync(file);
@@ -51,8 +56,10 @@ Getset.prototype.load = function(file, callback){
  * @return {Object} Getset object.
  */
 Getset.prototype.unload = function(){
+  this.unwatch(); // if watching
   this._values = {};
   this._comments = {};
+  this._header = null;
   this._file = null;
   this._modified = false;
   return this;
@@ -67,6 +74,7 @@ Getset.prototype.unload = function(){
 Getset.prototype.reload = function(callback){
   var file = this._file;
   this._file = null; // so it doesn't throw
+  debug('Reloading ' + file);
   return this.load(file, callback);
 };
 
@@ -75,12 +83,13 @@ Getset.prototype.reload = function(callback){
  * @param {Function} callback Callback.
  * @return {Object} Getset object.
  */
-Getset.prototype.watch = function(callback){
-  if (this._watching) return callback(new Error('Watch already set.'));
+Getset.prototype.watch = function(cb){
+  if (this._watcher) return cb && cb(new Error('Watch already set.'));
   if (!this._file) throw(new Error('No file set!'));
 
-  var self = this, error;
-  this._watching = true;
+  var self = this,
+      opts = { persistent: false },
+      error;
 
   var changed_cb = function(event, filename) {
     if (event != 'change')
@@ -94,12 +103,13 @@ Getset.prototype.watch = function(callback){
   }
 
   try {
-    fs.watch(this._file, changed_cb);
+    debug('Watching: ' + this._file);
+    this._watcher = fs.watch(this._file, opts, changed_cb);
   } catch(e) {
     error = e;
   }
 
-  callback && callback(error);
+  cb && cb(error);
   return this;
 }
 
@@ -107,10 +117,13 @@ Getset.prototype.watch = function(callback){
  * Removes watch for config file, if already set.
  * @return {null}
  */
-Getset.prototype.unwatch = function(callback){
-  if (!this._watching) return;
-  fs.unwatchFile(this._file);
-  this._watching = false;
+Getset.prototype.unwatch = function(cb){
+  if (!this._watcher) return cb && cb(new Error('Not watching.'));
+  if (!this._file) throw(new Error('No file set!'));
+
+  debug('Unwatching ' + this._file);
+  this._watcher.close();
+  this._watcher = null;
 }
 
 /**
@@ -122,6 +135,7 @@ Getset.prototype.unwatch = function(callback){
 Getset.prototype.read = function(file, callback){
   if (!callback) return this.readSync(file);
 
+  debug('Reading ' + file)
   fs.readFile(file, function(err, data){
     if (err) return callback(err);
     callback(null, parser.decode(data.toString()));
@@ -234,6 +248,7 @@ Getset.prototype.save = function(callback){
       return callback && callback();
     }
 
+    debug('Writing changes to ' + self._file)
     fs.writeFile(self._file, str, function(err){
       self._modified = false;
       callback && callback(err);
@@ -277,6 +292,8 @@ Getset.prototype.sync = function(other_file, replace, cb){
     replace_values = replace;
 
   var self = this;
+
+  debug('Syncing contents with ' + other_file)
   this.read(other_file, function(err, result){
     if (err) return cb && cb(err);
 
@@ -331,6 +348,7 @@ Getset.prototype.loadSync = function(file){
  * @return {Object} Set of key-values read from file.
  */
 Getset.prototype.readSync = function(file){
+  debug('Reading ' + file)
   try {
     var data = fs.readFileSync(file);
     return parser.decode(data.toString());

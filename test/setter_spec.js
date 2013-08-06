@@ -1,9 +1,10 @@
 var should = require('should'),
     sinon  = require('sinon'),
-    getset = require('./../');
+    getset = require('./../'),
+    join   = require('path').join;
 
-var basedir = __dirname + '/fixtures',
-    valid = basedir + '/valid.ini';
+var basedir = join(__dirname, 'fixtures'),
+    valid   = join(basedir, 'valid.ini');
 
 describe('setting', function(){
 

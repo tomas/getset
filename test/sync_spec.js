@@ -1,16 +1,17 @@
 var should = require('should'),
     sinon  = require('sinon'),
     getset = require('./../'),
-    fs = require('fs');
+    fs     = require('fs'),
+    join   = require('path').join;
 
-var basedir      = __dirname + '/fixtures',
-    valid        = basedir + '/valid.ini',
-    empty        = basedir + '/empty.ini',
-    invalid      = basedir + '/invalid.ini',
-    missing_file = basedir + '/missing.ini',
-    commented    = basedir + '/commented.ini',
-    modified     = basedir + '/modified.ini',
-    modified_with_comments = basedir + '/modified_with_comments.ini',
+var basedir   = join(__dirname, 'fixtures'),
+    valid     = join(basedir, 'valid.ini'),
+    empty     = join(basedir, 'empty.ini'),
+    invalid   = join(basedir, 'invalid.ini'),
+    missing_file = join(basedir, 'missing.ini'),
+    commented = join(basedir, 'commented.ini'),
+    modified  = join(basedir, 'modified.ini'),
+    modified_with_comments = join(basedir, 'modified_with_comments.ini'),
     call, file, previous_values, previous_comments;
 
 var valid_content = fs.readFileSync(valid);

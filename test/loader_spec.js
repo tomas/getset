@@ -1,13 +1,15 @@
 var should = require('should'),
     sinon  = require('sinon'),
     getset = require('./../'),
-    fs = require('fs');
+    fs     = require('fs'),
+    join   = require('path').join;
 
-var basedir = __dirname + '/fixtures',
-    valid = basedir + '/valid.ini',
-    empty = basedir + '/empty.ini',
-    invalid = basedir + '/invalid.ini',
-    missing_file = basedir + '/missing.ini',
+
+var basedir = join(__dirname, 'fixtures'),
+    valid   = join(basedir, 'valid.ini'),
+    empty   = join(basedir, 'empty.ini'),
+    invalid = join(basedir, 'invalid.ini'),
+    missing_file = join(basedir, 'missing.ini'),
     missing_dir = '/not/found',
     call, file;
 
