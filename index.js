@@ -89,17 +89,20 @@ Getset.prototype.watch = function(cb){
 
   var self = this,
       opts = { persistent: false },
+      reloading = false,
       error;
 
   var changed_cb = function(event, filename) {
-    if (event != 'change')
+    if (event != 'change' || reloading)
       return;
+
+    reloading = true;
 
     // we pass a callback to use the async version of load
     self.reload(function(err){
+      reloading = false;
       if (!err) self.emit('changed');
     });
-
   }
 
   try {
