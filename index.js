@@ -76,20 +76,25 @@ Getset.prototype.reload = function(callback){
  * @return {Object} Getset object.
  */
 Getset.prototype.watch = function(callback){
-  if (this._watching) return callback(new Error("Watch already set."));
+  if (this._watching) return callback(new Error('Watch already set.'));
+  if (!this._file) throw(new Error('No file set!'));
 
   var self = this, error;
   this._watching = true;
 
-  try {
+  var changed_cb = function(event, filename) {
+    if (event != 'change')
+      return;
 
-    fs.watch(this._file, function(event, filename) {
-      if (event == 'change') self.reload(function(err){
-        if (!err) self.emit('changed');
-        // we pass a callback to use the async version of load
-      });
+    // we pass a callback to use the async version of load
+    self.reload(function(err){
+      if (!err) self.emit('changed');
     });
 
+  }
+
+  try {
+    fs.watch(this._file, changed_cb);
   } catch(e) {
     error = e;
   }
@@ -279,7 +284,7 @@ Getset.prototype.sync = function(other_file, replace, cb){
       return cb && cb(new Error("No values found."))
 
     // merge header, if present
-    if (result.header) 
+    if (result.header)
       self._header = result.header;
 
     // merge comments, replacing old ones with new ones
