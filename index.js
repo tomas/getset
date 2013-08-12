@@ -12,6 +12,8 @@ var fs = require('fs'),
     util    = require('util'),
     Emitter = require('events').EventEmitter;
 
+var write_timeout = 300;
+
 var debug = function(str) {
   if (process.env.DEBUG && process.stdout.writable)
     process.stdout.write(str + '\n');
@@ -182,7 +184,7 @@ Getset.prototype.writable = function(callback){
   var returned = false;
   var stream = fs.createWriteStream(this._file, { flags: 'a' });
   stream.on('error', done);
-  setTimeout(done, 100);
+  setTimeout(done, write_timeout);
   stream.destroy();
 }
 
