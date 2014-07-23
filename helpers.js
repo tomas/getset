@@ -69,3 +69,44 @@ exports.intersect = function(target, source){
 
   return target;
 }
+
+exports.flatten = function(object, into, prefix) {
+  into = into || {};
+
+  for (var key in object) {
+    var prefix_key = prefix ? prefix + '.' + key : key;
+    var prop = object[key];
+
+    if (prop && typeof prop === 'object')
+      exports.flatten(prop, into, prefix_key)
+    else
+      into[prefix_key] = prop;
+  }
+
+  return into;
+}
+
+exports.unflatten = function (obj) {
+
+  return Object.keys(obj).reduce(function(previous, current) {
+    var target = previous, 
+        keys   = current.split('.');
+
+    for (var i = 0; i < keys.length-1; i++) {
+
+      if (!target.hasOwnProperty(keys[i])) { 
+        // target[keys[i]] = is_number(keys[i+1]) ? [] : {};
+        // only mark as array if first element is a zero
+        target[keys[i]] = keys[i+1].toString() == '0' ? [] : {};
+      }
+
+      target = target[keys[i]];
+    }
+
+    var k = keys[keys.length-1];
+    target[k] = obj[current];
+    return previous;
+
+  }, {});
+
+};

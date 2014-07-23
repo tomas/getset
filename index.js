@@ -1,8 +1,6 @@
 var fs        = require('fs'),
     resolve   = require('path').resolve,
     dirname   = require('path').dirname,
-    flatten   = require('flat').flatten,
-    unflatten = require('flat').unflatten,
     helpers   = require('./helpers'),
     Emitter   = require('events').EventEmitter;
 
@@ -40,6 +38,7 @@ Config.prototype.unload = function() {
   this._values = {};
   this._meta = {};
   this._modified = false;
+  return this;
 }
 
 Config.prototype.load = function(cb) {
@@ -93,7 +92,7 @@ Config.prototype.merge_data = function(what, obj, replace) {
   debug('Setting ' + what + ' with replace ' + replace, obj);
 
   var key  = '_' + what,
-      flat = flatten(obj),
+      flat = helpers.flatten(obj),
       res  = helpers.mixin(this[key], flat, replace);
 
   this[key] = res;
@@ -102,16 +101,34 @@ Config.prototype.merge_data = function(what, obj, replace) {
 }
 
 Config.prototype.values = function() {
-  return unflatten(this._values);
+  return helpers.unflatten(this._values);
 }
 
 Config.prototype.get = function(key, subkey) {
-  if (subkey && typeof this._values[key] != 'undefined')
-    return helpers.guess_type(this._values[key][subkey]);
-  else if (this._values[key])
-    return helpers.guess_type(this._values[key]);
-  else
-    return helpers.guess_type(unflatten(this._values)[key]);
+  var res, self = this;
+
+  function unflat(key, subkey) {
+    var obj = helpers.unflatten(self._values);
+    if (subkey)
+      return obj[key] ? obj[key][subkey] : null;
+    else
+      return obj[key];
+  }
+
+  if (subkey) {
+    if (this._values[key])
+      res = this._values[key][subkey];
+    else if (this._values[key + '.' + subkey])
+      res = this._values[key + '.' + subkey];
+    else
+      res = unflat(key, subkey);
+  } else if (this._values[key]) {
+    res = this._values[key];
+  } else {
+    res = unflat(key);
+  }
+
+  return helpers.guess_type(res);
 }
 
 Config.prototype.set = function(key, val) {
@@ -129,7 +146,7 @@ Config.prototype.set = function(key, val) {
 
   // if strict mode is enabled, ensure all keys are present
   if (this.strict) {
-    for (var key in flatten(obj)) {
+    for (var key in helpers.flatten(obj)) {
       if (!this._values[key]) {
         debug('Trying to set value for nonexisting key: ' + key + ' Unallowed on strict mode.')
         return false;
@@ -151,31 +168,31 @@ Config.prototype.save = function(cb) {
   if (!this._modified) return cb && cb(); // false or empty callback
 
   var self   = this,
-      nested = unflatten(this._values),
+      nested = helpers.unflatten(this._values),
       obj    = { values : nested };
 
-  if (this._meta) obj.meta = unflatten(this._meta);
-  debug('Saving: ', obj);
+  if (this._meta) obj.meta = helpers.unflatten(this._meta);
+  // debug('Saving: ', obj);
 
   types[this.type].save(this.path, obj, function(err) {
     self._modified = false;
-    if (cb) cb(err);
+    cb && cb(err);
   });
 
   return this;
 }
 
 Config.prototype.sync = function(other_file, replace, cb) {
+  debug('Syncing contents with ' + other_file);
+
   var replace_values = false;
 
   if (typeof replace == 'function')
     cb = replace;
   else
-    replace_values = replace;
+    replace_values = replace; // could be true, false or 'nonempty'
 
   var self = this;
-
-  debug('Syncing contents with ' + other_file)
   types[this.type].read(other_file, function(err, result) {
     if (err) return cb && cb(err);
 
@@ -189,7 +206,7 @@ Config.prototype.sync = function(other_file, replace, cb) {
     self.merge_data('values', result.values, replace_values);
 
     // remove unexisting keys in new file
-    self._values = helpers.intersect(self._values, result.values);
+    self._values = helpers.intersect(self._values, helpers.flatten(result.values));
 
     self.save(cb);
   });

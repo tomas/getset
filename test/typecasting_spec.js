@@ -9,6 +9,7 @@ var basedir = __dirname + '/fixtures',
     arrays  = basedir + '/arrays.ini';
 
 var data = fs.readFileSync(valid);
+var config;
 
 var new_tmpfile = function(){
   fs.writeFileSync(tmpfile, data);
@@ -17,17 +18,17 @@ var new_tmpfile = function(){
 }
 
 var setget = function(key, val, cb){
-  getset.unload();
-  getset.load(new_tmpfile());
+  if (config) config.unload();
+  config = getset.load(new_tmpfile());
 
-  getset.set(key, val, true);
-  getset.get(key).should.eql(val);
+  config.set(key, val);
+  config.get(key).should.eql(val);
 
-  getset.save(function(err){
+  config.save(function(err){
     // console.log(fs.readFileSync(tmpfile).toString());
-    getset.unload();
-    getset.load(tmpfile);
-    cb(getset);
+    config.unload();
+    config = getset.load(tmpfile);
+    cb(config);
   });
 }
 
@@ -79,8 +80,8 @@ describe('types', function(){
   it('should store nested objects correctly', function(done){
 
     var ubuntu_releases = {
-        '2011.10': 'oneiric ocelot',
-        '2012.04': 'precise pangolin'
+      '2011-10': 'oneiric ocelot',
+      '2012-04': 'precise pangolin'
     }
 
     var data = {
@@ -89,7 +90,7 @@ describe('types', function(){
       }
     }
 
-    setget('distros', data, function(gs){
+    setget('distros', data, function(gs) {
       gs.get('distros', 'debian').ubuntu.should.eql(ubuntu_releases);
       done();
     })
@@ -118,8 +119,8 @@ describe('types', function(){
   it('should verify array indexes', function(done){
 
     setget('test', {0: 'asdasd', 1: 'test', 3: '12312'}, function(gs){
-      should.equal(gs.get('test').length, null); // not array
-      gs.get('test').should.eql({0: 'asdasd', 1: 'test', 3: '12312'});
+      should.equal(gs.get('test').length, 4); // yes array
+      gs.get('test').should.eql(['asdasd', 'test', undefined, 12312]);
       done();
     })
 
@@ -127,8 +128,8 @@ describe('types', function(){
 
   it('should not confuse arrays with hashes', function(done){
 
-    setget('music', {0: 'asdasd', foo: 'bar'}, function(gs){
-      gs.get('music').should.eql({0: 'asdasd', foo: 'bar'});
+    setget('music', { foo: 'bar', '1': 'asdasd' }, function(gs){
+      gs.get('music').should.eql({ '1': 'asdasd', foo: 'bar'});
       done();
     })
 

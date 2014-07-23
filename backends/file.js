@@ -49,11 +49,12 @@ exports.readSync = function(file) {
 }
 
 exports.save = function(file, obj, cb) {
+
   var self = this,
       opts = { header: obj.meta.header, comments: obj.meta.comments },
       str  = parser.encode(obj.values, opts);
 
-  if (str.indexOf('[object Object]') != -1)
+  if (str.indexOf('Object]') != -1)
     return cb && cb(new Error('Error merging values.'));
 
   fs.readFile(file, function(err, data) {
@@ -64,8 +65,6 @@ exports.save = function(file, obj, cb) {
     }
 
     debug('Writing changes to ' + file)
-    console.log(str);
-
     fs.writeFile(file, str, function(err) {
       cb && cb(err);
     });
