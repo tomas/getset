@@ -26,20 +26,6 @@ describe('watch', function() {
     fs.unlink(temp_ini, done);
   })
 
-  describe('when no file is loaded', function() {
-
-    it('throws an error', function() {
-
-      config = getset.load('memory');
-
-      (function(){
-        config.watch();
-      }).should.throw('No file set!');
-
-    })
-
-  })
-
   describe('when a file is loaded', function() {
 
     before(function() {
@@ -99,28 +85,12 @@ describe('unwatch', function() {
     fs.unlink(temp_ini, done);
   })
 
-  describe('when no file is loaded', function() {
-
-    config = getset.load('memory');
-
-    it('callsback an error', function(done) {
-
-      config.unwatch(function(err){
-        should.exist(err);
-        err.message.should.equal('Not watching.');
-        done();
-      })
-
-    })
-
-  })
-
   describe('with file loaded, but not watching', function() {
 
     before(function(done){
       getset.load(temp_ini, function(err, obj) {
         config = obj;
-        should.not.exist(config._watcher);
+        should.not.exist(config.watcher);
         done()
       });
     })
@@ -132,7 +102,7 @@ describe('unwatch', function() {
     it('callsback an error', function(done) {
       config.unwatch(function(err){
         should.exist(err);
-        err.message.should.equal('Not watching.');
+        err.message.should.equal('Not watching!');
         done();
       })
 
@@ -146,7 +116,7 @@ describe('unwatch', function() {
       config = getset.load(temp_ini)
 
       config.watch(function(){
-        should.exist(config._watcher);
+        should.exist(config.watcher);
         done();
       });
     })
