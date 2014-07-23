@@ -1,10 +1,10 @@
 var should = require('should'),
     sinon  = require('sinon'),
     getset = require('./../'),
-    fs = require('fs');
+    fs     = require('fs');
 
 var basedir = __dirname + '/fixtures',
-    valid = basedir + '/valid.ini',
+    valid   = basedir + '/valid.ini',
     tmpfile = '/tmp/valid.ini',
     arrays  = basedir + '/arrays.ini';
 

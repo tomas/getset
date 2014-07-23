@@ -15,7 +15,7 @@ describe('watch', function() {
   before(function(done) {
     helpers.copy(valid_ini, temp_ini, function(err){
       should.not.exist(err);
-      getset.unload();
+      // getset.unload();
       done();
     });
   })

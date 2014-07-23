@@ -1,294 +1,171 @@
-/***********************************************/
-/* Getset - Configuration handler for Node.js
-/* Written by Tomás Pollak <tomas@forkhq.com>
-/* (c) 2012 Fork Ltd.
-/* MIT Licensed
-/***********************************************/
+var fs        = require('fs'),
+    resolve   = require('path').resolve,
+    dirname   = require('path').dirname,
+    flatten   = require('flat').flatten,
+    unflatten = require('flat').unflatten,
+    helpers   = require('./helpers'),
+    Emitter   = require('events').EventEmitter;
 
-var fs = require('fs'),
-    path_resolve = require('path').resolve,
-    parser  = require('./lib/parser'),
-    helpers = require('./helpers'),
-    util    = require('util'),
-    Emitter = require('events').EventEmitter;
 
-var write_timeout = 300;
+var configs   = {},
+    debugging = !!process.env.DEBUG;
 
-var debug = function(str) {
-  if (process.env.DEBUG && process.stdout.writable)
-    process.stdout.write(str + '\n');
+var types = {
+  file: require('./backends/file'),
+  mem:  require('./backends/memory')
 }
 
-var Getset = function(){
-  this._file     = null;
-  this._values   = {};
-  this._comments = {};
-};
+/// helpers
 
-util.inherits(Getset, Emitter);
+var debug = debugging ? console.log : function() { } ;
 
-/**
- * Loads given config file, assings its values and sets it as the [_file}.
- * @param {String} file Location of file.
- * @param {Function} [callback="(null)"] Callback for asynchronous load.
- * @return {Object} Getset object.
- */
-Getset.prototype.load = function(file, callback){
+function determine_type(path) {
+  if (path && fs.existsSync(dirname(path)))
+    return 'file';
+  else
+    return 'mem';
+}
 
-  if (!file || file == '') throw(new Error('Invalid file path.'));
-  if (this._file) throw(new Error('Already loaded: ' + this._file));
+/// the main act
+
+var Config = function(opts) {
+  this.path      = opts.path && resolve(opts.path);
+  this.type      = opts.type || determine_type(this.path);
+  this.strict    = opts.strict || false; // whether to allow new keys to be set or not
+  this.readonly  = opts.readonly || false;
+  this.unload(); // set everything to blank
+}
+
+Config.prototype.unload = function() {
+  this._values = {};
+  this._meta = {};
+  this._modified = false;
+}
+
+Config.prototype.load = function(cb) {
+  if (!cb) return this.loadSync();
 
   var self = this;
-  if (!callback) return this.loadSync(file);
+  types[this.type].read(this.path, function(err, result) {
+    if (err) return cb(err);
 
-  this.read(file, function(err, result){
-    if (err) return callback(err);
-
-    if (result.header) self._header = result.header;
-    self._comments = result.comments;
-    self.loaded(file);
-    callback(null, self.merge(result.values));
+    self.loaded(result);
+    cb(null, self);
   });
 
   return this;
 }
 
-/**
- * Unloads values and sets file to null, so a new one can be loaded.
- * @return {Object} Getset object.
- */
-Getset.prototype.unload = function(){
-  this.unwatch(); // if watching
-  this._values = {};
-  this._comments = {};
-  this._header = null;
-  this._file = null;
+Config.prototype.reload = function(cb) {
+  return this.load(cb);
+}
+
+Config.prototype.loadSync = function(file) {
+  var result = types[this.type].readSync(this.path);
+  this.loaded(result);
+  return this;
+};
+
+Config.prototype.loaded = function(result) {
+  debug('Loaded:', result)
+  if (result.meta) this.merge_data('meta', result.meta, true);
+  this.merge(result.values, true); // do replace values
   this._modified = false;
   return this;
-};
-
-
-/**
- * Reload config file, merging new values with existing ones.
- * @param {Function} [callback="(null)"] Callback for asynchronous load.
- * @return {Object} Getset object.
- */
-Getset.prototype.reload = function(callback){
-  var file = this._file;
-  this._file = null; // so it doesn't throw
-  debug('Reloading ' + file);
-  return this.load(file, callback);
-};
-
-/**
- * Sets up watch for config file, calling self.reload() if changes are detected.
- * @param {Function} callback Callback.
- * @return {Object} Getset object.
- */
-Getset.prototype.watch = function(cb){
-  if (this._watcher) return cb && cb(new Error('Watch already set.'));
-  if (!this._file) throw(new Error('No file set!'));
-
-  var self = this,
-      opts = { persistent: false },
-      reloading = false,
-      error;
-
-  var changed_cb = function(event, filename) {
-    if (event != 'change' || reloading)
-      return;
-
-    reloading = true;
-
-    // we pass a callback to use the async version of load
-    self.reload(function(err){
-      reloading = false;
-      if (!err) self.emit('changed');
-    });
-  }
-
-  try {
-    debug('Watching: ' + this._file);
-    this._watcher = fs.watch(this._file, opts, changed_cb);
-  } catch(e) {
-    error = e;
-  }
-
-  cb && cb(error);
-  return this;
 }
 
-/**
- * Removes watch for config file, if already set.
- * @return {null}
- */
-Getset.prototype.unwatch = function(cb){
-  if (!this._watcher) return cb && cb(new Error('Not watching.'));
-  if (!this._file) throw(new Error('No file set!'));
-
-  debug('Unwatching ' + this._file);
-  this._watcher.close();
-  this._watcher = null;
+Config.prototype.present = function(cb) {
+  return types[this.type].present(this.path, cb);
 }
 
-/**
- * Reads given config file without settings any values.
- * @param {String} file Location of file.
- * @param {Function} [callback="(null)"] Callback for asynchronous load.
- * @return {Object} Values read from file (if called without callback).
- */
-Getset.prototype.read = function(file, callback){
-  if (!callback) return this.readSync(file);
+Config.prototype.writable = function(cb) {
+  if (this.readonly) 
+    return cb ? cb(false) : false;
 
-  debug('Reading ' + file)
-  fs.readFile(file, function(err, data){
-    if (err) return callback(err);
-    callback(null, parser.decode(data.toString()));
-  });
+  return types[this.type].writable(this.path, cb);
 }
 
-/**
- * Assigns object to set of values.
- * @param {Object} opts Key-value hash containing config values.
- * @return {Object} Getset instance.
- */
-
-// Getset.prototype.include = function(opts){
-//   return this.merge(opts);
-// }
-
-/**
- * Checks if config file exists or not.
- * @param {Function} callback Callback for asyncronous response.
- * @return {Boolean} True/false depending if file exists or not.
- */
-Getset.prototype.present = function(callback){
-  if (!callback) return fs.existsSync(this._file);
-  fs.exists(this._file, callback);
+Config.prototype.merge = function(obj, replace) {
+  return this.merge_data('values', obj, replace);
 }
 
-/**
- * Async function to check if file is writable or not.
- * @param {Function} callback Callback
- * @return {null}
- */
-Getset.prototype.writable = function(callback){
-  if (!callback) return;
+Config.prototype.merge_data = function(what, obj, replace) {
+  debug('Setting ' + what + ' with replace ' + replace, obj);
 
-  var done = function(err){
-    if (returned) return;
-    returned = true;
-    callback(err ? false : true);
-  }
+  var key  = '_' + what,
+      flat = flatten(obj),
+      res  = helpers.mixin(this[key], flat, replace);
 
-  var returned = false;
-  var stream = fs.createWriteStream(this._file, { flags: 'a' });
-  stream.on('error', done);
-  setTimeout(done, write_timeout);
-  stream.destroy();
-}
-
-/**
- * Returns value stored at [key], optionally with [subkey]
- * @param {String} key Key where to get value from.
- * @param {String} subkey If you want to get a specific item.
- * @return {Any} Whatever was found at that path.
- */
-Getset.prototype.get = function(key, subkey){
-  if (subkey && typeof this._values[key] != 'undefined')
-    return helpers.guess_type(this._values[key][subkey]);
-  else
-    return helpers.guess_type(this._values[key]);
-}
-
-/**
- * Sets value at [key] if [key] exists or [force] is true.
- * @param {String} key Key where to set value.
- * @param {String} val Value to be set
- * @param {Bool} force Forces key to be set even if it does not exist.
- * @return {String/Undefined} Depending if the value was set or not.
- */
-Getset.prototype.set = function(key, val, force){
-  if (typeof val == 'undefined' ||
-    (!force && this._file && typeof this._values[key] == 'undefined')) return;
-
-  var opts = {};
-  opts[key] = val;
-  return this.merge(opts, true);
-}
-
-/**
- * Sets value at [key] and saves document if it was successful.
- * @param {String} key Key where to set value.
- * @param {String} val Value to be set
- * @return {String/Undefined} Depending if the value was set or not.
- */
-Getset.prototype.update = function(key, val, callback){
-  if (this.set(key, val))
-    return this.save(callback);
-  else
-    return callback ? callback(new Error('Unable to set value for key: ' + key)) : false;
-}
-
-/**
- * Saves config file with current set of values.
- * @param {Function} callback Callback to check if fs.writeFile was successful.
- * @return {null}
- */
-Getset.prototype.save = function(callback){
-  if (!this._file) return callback && callback(new Error("No file set."));
-
-  var self = this,
-      opts = {header: this._header, comments: this._comments},
-      str  = parser.encode(this._values, opts)
-
-  if (str.indexOf('[object Object]') != -1)
-    return callback && callback(new Error('Error merging values.'));
-
-  fs.readFile(this._file, function(err, data){
-    // if (err) return callback && callback(err);
-
-    if (data && data.toString().trim() === str.trim()) { // no changes
-      self._modified = false;
-      return callback && callback();
-    }
-
-    debug('Writing changes to ' + self._file)
-    fs.writeFile(self._file, str, function(err){
-      self._modified = false;
-      callback && callback(err);
-    });
-
-  })
-
-  return this;
-}
-
-/**
- * Merges [opts] into values, only replacing if [replace] is true
- * @param {Object} opts Key-value hash containing config values.
- * @return {Object} Config instance.
- */
-Getset.prototype.merge = function(opts, replace){
-  return this.merge_data('values', opts, replace);
-}
-
-Getset.prototype.merge_data = function(what, opts, replace){
-  var key = '_' + what;
-  this[key] = helpers.mixin(this[key], opts, replace);
+  this[key] = res;
   this._modified = true;
   return this;
 }
 
-/**
- * Reads [other_file], sets unexisting key-vals and saves current file.
- * @param {String} other_file Location of the file to sync with.
- * @param {Function} callback Callback to check if fs.writeFile was successful.
- * @return {null}
- */
-Getset.prototype.sync = function(other_file, replace, cb){
-  if (!this._file) throw(new Error("No file set."));
+Config.prototype.values = function() {
+  return unflatten(this._values);
+}
 
+Config.prototype.get = function(key, subkey) {
+  if (subkey && typeof this._values[key] != 'undefined')
+    return helpers.guess_type(this._values[key][subkey]);
+  else if (this._values[key])
+    return helpers.guess_type(this._values[key]);
+  else
+    return helpers.guess_type(unflatten(this._values)[key]);
+}
+
+Config.prototype.set = function(key, val) {
+  if (this.readonly) 
+    return false;
+
+  if (typeof key == 'object') {
+    var obj = key;
+  } else if (typeof val != 'undefined') {
+    var obj = {};
+    obj[key] = val;
+  } else {
+    return false;
+  }
+
+  // if strict mode is enabled, ensure all keys are present
+  if (this.strict) {
+    for (var key in flatten(obj)) {
+      if (!this._values[key]) {
+        debug('Trying to set value for nonexisting key: ' + key + ' Unallowed on strict mode.')
+        return false;
+      }
+    }
+  }
+
+  return this.merge(obj, true);
+}
+
+Config.prototype.update = function(key, val, cb) {
+  if (this.set(key, val))
+    return this.save(callback);
+  else
+    return cb ? cb(new Error('Unable to set value for key: ' + key)) : false;
+}
+
+Config.prototype.save = function(cb) {
+  if (!this._modified) return cb && cb(); // false or empty callback
+
+  var self   = this,
+      nested = unflatten(this._values),
+      obj    = { values : nested };
+
+  if (this._meta) obj.meta = unflatten(this._meta);
+  debug('Saving: ', obj);
+
+  types[this.type].save(this.path, obj, function(err) {
+    self._modified = false;
+    if (cb) cb(err);
+  });
+
+  return this;
+}
+
+Config.prototype.sync = function(other_file, replace, cb) {
   var replace_values = false;
 
   if (typeof replace == 'function')
@@ -299,18 +176,14 @@ Getset.prototype.sync = function(other_file, replace, cb){
   var self = this;
 
   debug('Syncing contents with ' + other_file)
-  this.read(other_file, function(err, result){
+  types[this.type].read(other_file, function(err, result) {
     if (err) return cb && cb(err);
 
     if (Object.keys(result.values).length == 0)
-      return cb && cb(new Error("No values found."))
+      return cb && cb(new Error('No values found.'))
 
-    // merge header, if present
-    if (result.header)
-      self._header = result.header;
-
-    // merge comments, replacing old ones with new ones
-    self.merge_data('comments', result.comments, true);
+    // merge result meta, replacing old ones with new ones
+    self.merge_data('meta', result.meta, true);
 
     // add new key/vals to values
     self.merge_data('values', result.values, replace_values);
@@ -322,44 +195,27 @@ Getset.prototype.sync = function(other_file, replace, cb){
   });
 }
 
-/**
- * Assigns [file] as base config file for persistence.
- * @param {String} file Location of file.
- * @return {null} Getset object.
- */
-Getset.prototype.loaded = function(file){
-  // if (this._file) return;
-  this._file = path_resolve(file);
-  this._modified = false;
-}
+exports.load = function(opts, cb) {
+  var opts = opts || {};
 
-/**
- * Reads and assigns values synchronously from file.
- * @param {String} file Location of file to read from.
- * @return {Object} Getset instance.
- */
-Getset.prototype.loadSync = function(file){
-  var result = this.readSync(file);
-  if (result.header) this._header = result.header;
-  this._comments = result.comments;
-  this.merge(result.values, true);
-  this.loaded(file);
-  return this;
-};
-
-/**
- * Reads synchronously from file, without assigning values.
- * @param {String} file Location of file to read from.
- * @return {Object} Set of key-values read from file.
- */
-Getset.prototype.readSync = function(file){
-  debug('Reading ' + file)
-  try {
-    var data = fs.readFileSync(file);
-    return parser.decode(data.toString());
-  } catch (e) {
-    return {values: {}, comments: {}};
+  if (typeof opts == 'string') {
+    var opts = { path: opts };
   }
-}
 
-module.exports = new Getset();
+  var path = opts.path;
+
+  if (!path && opts.type != 'mem') 
+      throw new Error('Invalid path.');
+
+/*
+  if (configs[path]) {
+    var obj = configs[path];
+    return cb ? cb(null, obj) : obj;
+  }
+*/
+
+  var config = new Config(opts);
+  configs[path] = config;
+
+  return config.load(cb);
+}

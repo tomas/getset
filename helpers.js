@@ -60,7 +60,6 @@ exports.mixin = function(target, source, replace){
   return target;
 }
 
-
 exports.intersect = function(target, source){
 
   Object.keys(target).forEach(function(key) {

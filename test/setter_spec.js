@@ -8,17 +8,21 @@ var basedir = join(__dirname, 'fixtures'),
 
 describe('setting', function(){
 
+  var config;
+
   afterEach(function(){
-    getset.unload();
+    config.unload();
   })
 
-  describe('when no file is loaded', function(){
+  describe('when no file is loaded', function() {
+
+    config = getset.load('memory');
 
     describe('and key exists', function(){
 
       it('should set value', function(){
-        getset.set('foo', 'kaboom');
-        getset.get('foo').should.eql('kaboom');
+        config.set('foo', 'kaboom');
+        config.get('foo').should.eql('kaboom');
       })
 
     })
@@ -26,8 +30,8 @@ describe('setting', function(){
     describe('and key does not exist', function(){
 
       it('should set value', function(){
-        getset.set('aaa', 'whats up');
-        getset.get('aaa').should.eql('whats up');
+        config.set('aaa', 'whats up');
+        config.get('aaa').should.eql('whats up');
       })
 
     })
@@ -36,30 +40,56 @@ describe('setting', function(){
 
   describe('when file is loaded', function(){
 
-    beforeEach(function(){
-      getset.load(valid);
-      getset._file.should.eql(valid);
-    })
+    describe('and strict mode is true', function() {
 
-    describe('and key exists', function(){
+      beforeEach(function(){
+        config = getset.load({ path: valid, strict: true });
+        config.path.should.eql(valid);
+      })
 
-      it('should set value', function(){
-        getset.set('foo', 'testtest');
-        getset.get('foo').should.eql('testtest');
+      describe('and key exists', function(){
+
+        it('should set value', function(){
+          config.set('foo', 'qweqwe');
+          config.get('foo').should.eql('qweqwe');
+        })
+
+      })
+
+      describe('and key does not exist', function(){
+
+        it('should NOT set value', function(){
+          config.set('something', 'too');
+          should.equal(config.get('something'), null);
+        })
+
       })
 
     })
 
-    describe('and key does not exist', function(){
+    describe('and strict mode is false', function() {
 
-      it('should NOT set value', function(){
-        getset.set('something', 'too');
-        should.equal(getset.get('something'), null);
+      beforeEach(function(){
+        config = getset.load({ path: valid, strict: false });
+        config.path.should.eql(valid);
       })
 
-      it('should set value if forced', function(){
-        getset.set('something', 'too', true);
-        getset.get('something').should.eql('too');
+      describe('and key exists', function(){
+
+        it('should set value', function(){
+          config.set('foo', 'testtest');
+          config.get('foo').should.eql('testtest');
+        })
+
+      })
+
+      describe('and key does not exist', function(){
+
+        it('should set value', function(){
+          config.set('something', 'too');
+          should.equal(config.get('something'), 'too');
+        })
+
       })
 
     })
