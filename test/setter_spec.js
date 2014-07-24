@@ -96,4 +96,24 @@ describe('setting', function(){
 
   })
 
+  describe('types', function() {
+
+    beforeEach(function(){
+      config = getset.load({ path: valid, strict: false });
+    })
+
+    describe('when overriding an object', function() {
+
+      it('is overriden completely', function() {
+        config.set('foo', [1,2,3])
+        config.set('foo', ['test'])
+        config.get('foo').should.be.an.array;
+        config.get('foo').length.should.equal(1);
+        config.get('foo')[0].should.equal('test');
+      })
+
+    })
+
+  })
+
 });
