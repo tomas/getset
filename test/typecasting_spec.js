@@ -82,6 +82,10 @@ describe('types', function(){
     setget('music', {rock: 1, jazz: 2}, function(gs){
       gs.get('music', 'rock').should.eql(1);
       gs.get('music', 'jazz').should.eql(2);
+
+      // also should work with flat keys
+      gs.get('music.rock').should.eql(1);
+      gs.get('music.jazz').should.eql(2);
       done();
     })
 
@@ -102,6 +106,22 @@ describe('types', function(){
 
     setget('distros', data, function(gs) {
       gs.get('distros', 'debian').ubuntu.should.eql(ubuntu_releases);
+      done();
+    })
+
+  })
+
+  it('should transform dots into nested objects', function(done) {
+
+    setget('foo.bar.quux', { val: true }, function(gs) {
+      gs.get('foo').should.have.keys('bar');
+      gs.get('foo.bar').should.have.keys('quux');
+      gs.get('foo', 'bar').should.have.keys('quux');
+      gs.get('foo.bar.quux').should.have.keys('val');
+      gs.get('foo.bar', 'quux').should.have.keys('val');
+      gs.get('foo', 'bar.quux').should.have.keys('val');
+      gs.get('foo.bar.quux.val').should.equal(true);
+      gs.get('foo.bar.quux', 'val').should.equal(true);
       done();
     })
 
