@@ -83,7 +83,7 @@ describe('loading', function(){
         it('should load values in memory', function(){
           var obj = call(valid);
           obj.path.should.eql(valid);
-          Object.keys(obj._values).should.eql(['foo', 'bar', 'boo', 'section-one.hello', 'other_section.this']);
+          Object.keys(obj._values).should.eql(['foo', 'bar', 'boo', 'section-one', 'other_section']);
           // obj.get('section-one').should.eql({'hello': 'world'});
         })
 
@@ -171,7 +171,7 @@ describe('loading', function(){
         it('should load values in memory', function(done){
           call(valid, function(err, config) {
             config.path.should.eql(valid);
-            Object.keys(config._values).should.eql(['foo', 'bar', 'boo', 'section-one.hello', 'other_section.this']);
+            Object.keys(config._values).should.eql(['foo', 'bar', 'boo', 'section-one', 'other_section']);
             config.get('section-one').should.eql({'hello': 'world'});
             done();
           });

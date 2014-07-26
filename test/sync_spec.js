@@ -120,12 +120,11 @@ describe('syncing', function(){
 
       it('should add new comments to original', function(done){
 
-        should.equal(config._meta['comments.bar'], null);
-//        Object.keys(config.meta._comments).length.should.eql(0);
+        Object.keys(config._meta.comments).length.should.eql(2);
 
         config.sync(commented, function(err) {
-          config._meta['comments.bar'].should.eql('; bar is very important for you\n');
-          // Object.keys(config.meta._comments).length.should.eql(2);
+          config._meta.comments.bar.should.eql('; bar is very important for you\n');
+          Object.keys(config._meta.comments).length.should.eql(3);
           done();
         });
 
@@ -134,11 +133,11 @@ describe('syncing', function(){
       it('should update existing comments in original, if modified', function(done){
 
         config = getset.load(commented);
-        var bar_comment = config._meta['comments.bar'];
+        var bar_comment = config._meta.comments.bar;
 
         config.sync(modified_with_comments, function(err){
-          config._meta['comments.bar'].should.not.eql(bar_comment);
-          // config._meta['comments.bar'].should.eql('; bar is very, but VERY important for you\n');
+          config._meta.comments.bar.should.not.eql(bar_comment);
+          config._meta.comments.bar.should.eql('; bar is very, but VERY important for you\n');
           done();
         });
 
@@ -147,10 +146,10 @@ describe('syncing', function(){
       it('should not remove comments from original, if not found', function(done){
 
         config = getset.load(commented);
-        Object.keys(config._meta).length.should.eql(2);
+        Object.keys(config._meta).length.should.eql(1);
 
         config.sync(valid, function(err){
-          Object.keys(config._meta).length.should.eql(2);
+          Object.keys(config._meta).length.should.eql(1);
           done();
         });
 
@@ -161,7 +160,7 @@ describe('syncing', function(){
         it('should add new keys to original', function(done){
           config._values.should.eql(previous_values);
           config.sync(modified, function(err){
-            Object.keys(config._values).should.eql([ 'foo', 'bar', 'boo', 'section-one.hello', 'renamed_section.this', 'new_section.foo' ]);
+            Object.keys(config._values).should.eql([ 'foo', 'bar', 'boo', 'section-one', 'renamed_section', 'new_section' ]);
             done();
           });
         })
@@ -195,7 +194,7 @@ describe('syncing', function(){
         it('should add new keys to original', function(done){
           config._values.should.eql(previous_values);
           config.sync(modified, 'nonempty', function(err){
-            Object.keys(config._values).should.eql([ 'foo', 'bar', 'boo', 'section-one.hello', 'renamed_section.this', 'new_section.foo' ]);
+            Object.keys(config._values).should.eql([ 'foo', 'bar', 'boo', 'section-one', 'renamed_section', 'new_section' ]);
             done();
           });
         })
@@ -229,7 +228,7 @@ describe('syncing', function(){
         it('should add new keys to original', function(done){
           config._values.should.eql(previous_values);
           config.sync(modified, true, function(err){
-            Object.keys(config._values).should.eql([ 'foo', 'bar', 'boo', 'section-one.hello', 'renamed_section.this', 'new_section.foo' ]);
+            Object.keys(config._values).should.eql([ 'foo', 'bar', 'boo', 'section-one', 'renamed_section', 'new_section' ]);
             done();
           });
         })

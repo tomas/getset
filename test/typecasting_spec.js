@@ -118,9 +118,9 @@ describe('types', function(){
 
   it('should verify array indexes', function(done){
 
-    setget('test', {0: 'asdasd', 1: 'test', 3: '12312'}, function(gs){
-      should.equal(gs.get('test').length, 4); // yes array
-      gs.get('test').should.eql(['asdasd', 'test', undefined, 12312]);
+    setget('test', {0: 'asdasd', 1: 'test', 3: '12312'}, function(gs) {
+      should.equal(gs.get('test').length, undefined); // not an array
+      gs.get('test').should.eql({0: 'asdasd', 1: 'test', 3: '12312'});
       done();
     })
 
