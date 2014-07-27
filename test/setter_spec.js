@@ -1,10 +1,8 @@
 var should = require('should'),
     sinon  = require('sinon'),
     getset = require('./../'),
-    join   = require('path').join;
+    valid  = require('./helpers').fixtures.valid;
 
-var basedir = join(__dirname, 'fixtures'),
-    valid   = join(basedir, 'valid.ini');
 
 describe('setting', function(){
 
@@ -106,10 +104,10 @@ describe('setting', function(){
 
       it('is overriden completely', function() {
         config.set('foo', [1,2,3])
-        config.set('foo', ['test'])
-        config.get('foo').should.be.an.array;
-        config.get('foo').length.should.equal(1);
-        config.get('foo')[0].should.equal('test');
+        config.set('foo', 'test')
+        config.get('foo').should.be.a.string;
+        config.get('foo').length.should.equal(4);
+        config.get('foo').should.equal('test');
       })
 
     })

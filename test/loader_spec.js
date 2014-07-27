@@ -1,15 +1,11 @@
-var should = require('should'),
-    sinon  = require('sinon'),
-    getset = require('./../'),
-    fs     = require('fs'),
-    join   = require('path').join;
+var should   = require('should'),
+    sinon    = require('sinon'),
+    getset   = require('./../'),
+    fixtures = require('./helpers').fixtures,
+    fs       = require('fs'),
+    join     = require('path').join;
 
-var basedir = join(__dirname, 'fixtures'),
-    valid   = join(basedir, 'valid.ini'),
-    empty   = join(basedir, 'empty.ini'),
-    invalid = join(basedir, 'invalid.ini'),
-    missing_file = join(basedir, 'missing.ini'),
-    missing_dir = '/not/found',
+var missing_dir = '/not/found',
     call, file;
 
 describe('loading', function(){
@@ -24,14 +20,14 @@ describe('loading', function(){
 
     it('should read file synchronously', function(){
       var readSync = sinon.spy(fs, 'readFileSync');
-      call(valid);
-      readSync.withArgs(valid).callCount.should.equal(1);
+      call(fixtures.valid);
+      readSync.withArgs(fixtures.valid).callCount.should.equal(1);
       readSync.restore();
     })
 
     it('should return instance of config', function(){
       // should have the functions we know of
-      var obj = call(valid)
+      var obj = call(fixtures.valid)
       obj.get.should.exist;
       obj.set.should.exist;
       obj.update.should.exist;
@@ -51,7 +47,7 @@ describe('loading', function(){
 
       it('should not raise an error', function(){
         var err = false;
-        try { call(missing_file) } catch(e) { err = e }
+        try { call(fixtures.missing_file) } catch(e) { err = e }
         err.should.be.false;
       })
 
@@ -61,9 +57,15 @@ describe('loading', function(){
 
       describe('and file is empty', function(){
 
+        it('should not raise an error', function(){
+          var err = false;
+          try { call(fixtures.empty) } catch(e) { err = e }
+          err.should.be.false;
+        })
+
         it('should keep an empty set of values', function(){
-          fs.existsSync(empty).should.be.true;
-          var obj = call(empty);
+          fs.existsSync(fixtures.empty).should.be.true;
+          var obj = call(fixtures.empty);
           Object.keys(obj._values).should.be.empty;
         })
 
@@ -71,8 +73,14 @@ describe('loading', function(){
 
       describe('and file is not a valid INI', function(){
 
+        it('should not raise an error', function(){
+          var err = false;
+          try { call(fixtures.invalid) } catch(e) { err = e }
+          err.should.be.false;
+        })
+
         it('should keep empty set of values', function(){
-          var obj = call(invalid);
+          var obj = call(fixtures.invalid);
           Object.keys(obj._values).should.be.empty;
         })
 
@@ -80,9 +88,15 @@ describe('loading', function(){
 
       describe('and file is a valid INI', function(){
 
+        it('should not raise an error', function(){
+          var err = false;
+          try { call(fixtures.valid) } catch(e) { err = e }
+          err.should.be.false;
+        })
+
         it('should load values in memory', function(){
-          var obj = call(valid);
-          obj.path.should.eql(valid);
+          var obj = call(fixtures.valid);
+          obj.path.should.eql(fixtures.valid);
           Object.keys(obj._values).should.eql(['foo', 'bar', 'boo', 'section-one', 'other_section']);
           // obj.get('section-one').should.eql({'hello': 'world'});
         })
@@ -109,7 +123,7 @@ describe('loading', function(){
     it('should read file asynchronously', function(done){
       var readFile = sinon.spy(fs, 'readFile');
 
-      call(valid, function() {
+      call(fixtures.valid, function() {
         readFile.callCount.should.equal(1); 
         readFile.restore();
         done();
@@ -131,7 +145,7 @@ describe('loading', function(){
       it('should callback with error', function(done){
         var err = false;
 
-        call(missing_file, function(e){
+        call(fixtures.missing_file, function(e){
           err = e;
           err.should.not.be.false;
           done();
@@ -144,9 +158,16 @@ describe('loading', function(){
 
       describe('and file is empty', function() {
 
+        it('should not callback with error', function(done){
+          call(fixtures.empty, function(e){
+            should.not.exist(e);
+            done();
+          })
+        })
+
         it('should keep an empty set of values', function(done){
-          call(empty, function(err, config) {
-            config.path.should.eql(empty);
+          call(fixtures.empty, function(err, config) {
+            config.path.should.eql(fixtures.empty);
             Object.keys(config._values).should.be.empty;
             done();
           });
@@ -154,11 +175,18 @@ describe('loading', function(){
 
       })
 
-      describe('and file is not a valid INI', function(){
+      describe('and file is not a valid INI', function() {
+
+        it('should not callback with error', function(done){
+          call(fixtures.invalid, function(e){
+            should.not.exist(e);
+            done();
+          })
+        })
 
         it('should keep empty set of values', function(done){
-          call(invalid, function(err, config) {
-            config.path.should.eql(invalid);
+          call(fixtures.invalid, function(err, config) {
+            config.path.should.eql(fixtures.invalid);
             Object.keys(config._values).should.be.empty;
             done();
           });
@@ -166,11 +194,18 @@ describe('loading', function(){
 
       })
 
-      describe('and file is a valid INI', function(){
+      describe('and file is a valid INI', function() {
+
+        it('should not callback with error', function(done){
+          call(fixtures.valid, function(e){
+            should.not.exist(e);
+            done();
+          })
+        })
 
         it('should load values in memory', function(done){
-          call(valid, function(err, config) {
-            config.path.should.eql(valid);
+          call(fixtures.valid, function(err, config) {
+            config.path.should.eql(fixtures.valid);
             Object.keys(config._values).should.eql(['foo', 'bar', 'boo', 'section-one', 'other_section']);
             config.get('section-one').should.eql({'hello': 'world'});
             done();
