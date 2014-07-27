@@ -8,6 +8,7 @@ describe('getting', function(){
 
   var config;
   var obj = {
+    plugins: ['one', 'two', 3],
     keys: {
       development: { storage: 'bar' },
       production: { storage: 'foo' }
@@ -40,10 +41,13 @@ describe('getting', function(){
     should.not.exist(config.get(2))
   })
 
-  it('returns full objects', function() {
+  it('returns original objects', function() {
     var res = config.get('app');
     res.should.be.an.object;
     res.keys.should.have.keys(['development', 'production']);
+
+    res.plugins.should.be.an.array;
+    res.plugins[0].should.equal('one');
   })
 
   it('accepts subkeys', function() {
