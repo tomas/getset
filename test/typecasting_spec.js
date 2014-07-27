@@ -22,7 +22,7 @@ var setget = function(key, val, cb){
   config = getset.load(new_tmpfile());
 
   config.set(key, val);
-  config.get(key).should.eql(val);
+  if (val) config.get(key).should.eql(val);
 
   config.save(function(err){
     // console.log(fs.readFileSync(tmpfile).toString());
@@ -33,6 +33,16 @@ var setget = function(key, val, cb){
 }
 
 describe('types', function(){
+
+  it('should save & load null as nulls', function(done){
+
+    setget('komkom', null, function(gs){
+      var val = gs.get('komkom');
+      should.equal(val, null);
+      done();
+    })
+
+  })
 
   it('should save & load true as boolean', function(done){
 
