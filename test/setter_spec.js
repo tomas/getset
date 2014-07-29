@@ -23,7 +23,7 @@ describe('setting', function(){
 
       it('doesnt set undefined values', function() {
         var res = config.set('foox', undefined);
-        res.should.be.false;
+        should.equal(res, undefined);
         should.not.exist(config.get('foox'))
       })
 
@@ -49,12 +49,12 @@ describe('setting', function(){
 
       it('doesnt set undefined values', function() {
         var res = config.set('foo', undefined);
-        res.should.be.false;
+        should.equal(res, undefined);
       })
 
       it('does not set null value', function() {
         var res = config.set('foo', null);
-        res.should.be.false;
+        should.equal(res, undefined);
         config.get('foo').should.eql('hola');
       })
 
@@ -71,7 +71,7 @@ describe('setting', function(){
 
         it('does not set value', function(){
           var res = config.set('foo', [1,2,3]);
-          res.should.be.false;
+          should.equal(res, undefined);
           config.get('foo').should.eql('hola');
         })
 
@@ -92,7 +92,7 @@ describe('setting', function(){
 
       it('doesnt set undefined values', function() {
         var res = config.set('foox', undefined);
-        res.should.be.false;
+        should.equal(res, undefined);
         should.not.exist(config.get('foox'))
       })
 
@@ -118,7 +118,7 @@ describe('setting', function(){
 
       it('doesnt set undefined values', function() {
         var res = config.set('foo', undefined);
-        res.should.be.false;
+        should.equal(res, undefined);
         config.get('foo').should.eql('hola');
       })
 
