@@ -1,17 +1,28 @@
 {
   "name": "getset",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Easier handling of configuration for client-based apps.",
   "author": "Tomás Pollak <tomas@forkhq.com>",
-  "repository": { "type": "git", "url": "https://github.com/tomas/getset.git" },
-  "tags": ["config", "settings", "options", "ini", "setup", "update", "upgrade"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tomas/getset.git"
+  },
+  "tags": [
+    "config",
+    "settings",
+    "options",
+    "ini",
+    "setup",
+    "update",
+    "upgrade"
+  ],
   "main": "./lib/index.js",
   "devDependencies": {
-    "mocha" : "",
+    "mocha": "",
     "should": "",
-    "sinon" : ""
+    "sinon": ""
   },
   "scripts": {
-    "test"  : "mocha"
+    "test": "mocha"
   }
 }
