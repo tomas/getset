@@ -12,6 +12,193 @@ describe('setting', function(){
     config.unload();
   })
 
+  describe('key', function() {
+
+    beforeEach(function(){
+      config = getset.load({ path: valid });
+      config.path.should.eql(valid);
+    })
+
+    describe('when simple string', function() {
+
+      describe('and undefined value', function() {
+
+        it('throws', function() {
+          (function() {
+            config.set('foo', undefined);
+          }).should.throw();
+        })
+
+      })
+
+      describe('and null value', function() {
+
+        it('sets value', function() {
+          var res = config.set('foo', 123);
+          // should.equal(res, null);
+          config.get('foo').should.equal(123);
+          config.set('foo', null);
+          should.equal(null, config.get('foo'))
+        })
+
+      })
+
+      describe('and integer value', function() {
+
+        it('sets value', function() {
+          var res = config.set('foo', 1234);
+          // res.should.equal(123);
+          config.get('foo').should.equal(1234);
+        })
+
+      })
+
+      describe('and string value', function() {
+
+        it('sets value', function() {
+          var res = config.set('foo', 'hola');
+          config.get('foo').should.equal('hola');
+        })
+
+      })
+
+      describe('and object value', function() {
+
+        it('sets value', function() {
+          var res = config.set('foo', { bar: 'baz' });
+          var val = config.get('foo');
+          val.should.be.an.Object;
+          val.should.have.keys('bar');
+          val.bar.should.equal('baz');
+        })
+
+      })
+
+    })
+
+    describe('when string with dots', function() {
+
+      describe('and undefined value', function() {
+
+        it('throws', function() {
+          (function() {
+            config.set('foo.bar', undefined);
+          }).should.throw();
+        })
+
+      })
+
+      describe('and null value', function() {
+
+        it('sets value', function() {
+          var res = config.set('foo.bar', null);
+          var val = config.get('foo');
+          val.should.be.an.Object;
+          val.should.have.keys('bar');
+          should.equal(null, val.bar);
+        })
+
+      })
+
+      describe('and integer value', function() {
+
+        it('sets value', function() {
+          var res = config.set('foo.bar', 123);
+          var val = config.get('foo');
+          val.should.be.an.Object;
+          val.should.have.keys('bar');
+          val.bar.should.equal(123);
+        })
+
+      })
+
+      describe('and string value', function() {
+
+        it('sets value', function() {
+          var res = config.set('foo.bar', 'hola');
+          var val = config.get('foo');
+          val.should.be.an.Object;
+          val.should.have.keys('bar');
+          val.bar.should.equal('hola');
+        })
+
+      })
+
+      describe('and object value', function() {
+
+        it('sets value', function() {
+          var res = config.set('foo.bar', { quux: 12345 });
+          var val = config.get('foo');
+          val.should.be.an.Object;
+          val.should.have.keys('bar');
+
+          val.bar.should.be.an.Object;
+          val.bar.should.have.keys('quux');
+          val.bar.quux.should.equal(12345)
+        })
+
+      })
+
+
+    })
+
+    describe('when object', function() {
+
+      describe('and undefined value', function() {
+
+        it('set value', function() {
+          var res = config.set({ foo: 'bar' }, undefined);
+          var val = config.get('foo');
+          val.should.equal('bar');
+        })
+
+      })
+
+      describe('and null value', function() {
+
+        it('throws', function() {
+          (function() {
+            res = config.set({ foo: 'bar' }, null);
+          }).should.throw();
+        })
+
+      })
+
+      describe('and integer value', function() {
+
+        it('throws', function() {
+          (function() {
+            res = config.set({ foo: 'bar' }, 123);
+          }).should.throw();
+        })
+
+      })
+
+      describe('and string value', function() {
+
+        it('throws', function() {
+          (function() {
+            res = config.set({ foo: 'bar' }, 'asd');
+          }).should.throw();
+        })
+
+      })
+
+      describe('and object value', function() {
+
+        it('throws', function() {
+          (function() {
+            res = config.set({ foo: 'bar' }, { something: 'else' });
+          }).should.throw();
+        })
+
+      })
+
+    })
+
+
+  })
+
   describe('and strict mode is true', function() {
 
     beforeEach(function(){
@@ -22,15 +209,18 @@ describe('setting', function(){
     describe('and key doesnt exist', function() {
 
       it('doesnt set undefined values', function() {
-        var res = config.set('foox', undefined);
-        should.equal(res, undefined);
-        should.not.exist(config.get('foox'))
+        (function() {
+          config.set('foox', undefined);
+        }).should.throw();
+
+        // should.equal(res, undefined);
+        // should.not.exist(config.get('foox'))
       })
 
       it('sets null values', function() {
         var res = config.set('foox', null);
         res.should.not.be.false;
-        should.not.exist(config.get('foox'))
+        should.equal(null, config.get('foox'))
       })
 
       it('sets value', function(){
@@ -48,8 +238,9 @@ describe('setting', function(){
       })
 
       it('doesnt set undefined values', function() {
-        var res = config.set('foo', undefined);
-        should.equal(res, undefined);
+        (function() {
+          config.set('foo', undefined);
+        }).should.throw();
       })
 
       it('does not set null value', function() {
@@ -91,15 +282,15 @@ describe('setting', function(){
     describe('and key doesnt exist', function() {
 
       it('doesnt set undefined values', function() {
-        var res = config.set('foox', undefined);
-        should.equal(res, undefined);
-        should.not.exist(config.get('foox'))
+        (function() {
+          config.set('foox', undefined);
+        }).should.throw();
       })
 
       it('sets null values', function() {
         var res = config.set('foox', null);
         res.should.not.be.false;
-        should.not.exist(config.get('foox'))
+        should.equal(null, config.get('foox'))
       })
 
       it('sets value', function(){
@@ -117,9 +308,9 @@ describe('setting', function(){
       })
 
       it('doesnt set undefined values', function() {
-        var res = config.set('foo', undefined);
-        should.equal(res, undefined);
-        config.get('foo').should.eql('hola');
+        (function() {
+          config.set('foo', undefined);
+        }).should.throw();
       })
 
       it('sets null values', function() {
@@ -172,7 +363,7 @@ describe('setting', function(){
 
       it('should NOT set value', function(){
         config.set('something', 'too');
-        should.not.exist(config.get('something'));
+        should.equal(undefined, config.get('something'))
       })
 
     })

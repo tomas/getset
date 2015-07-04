@@ -48,7 +48,7 @@ describe('types', function(){
 
     setget('is_this_awesome', true, function(gs){
       var val = gs.get('is_this_awesome');
-      val.should.be.a('boolean');
+      val.should.be.a.Boolean;
       val.should.eql(true);
       done();
     })
@@ -59,7 +59,7 @@ describe('types', function(){
 
     setget('does_this_suck', false, function(gs){
       var val = gs.get('does_this_suck');
-      val.should.be.a('boolean');
+      val.should.be.a.Boolean;
       val.should.eql(false);
       done();
     })
@@ -70,7 +70,7 @@ describe('types', function(){
 
     setget('the answer to everything', 42, function(gs){
       var val = gs.get('the answer to everything');
-      val.should.be.a('number');
+      val.should.be.a.Number;
       val.should.eql(42);
       done();
     })
